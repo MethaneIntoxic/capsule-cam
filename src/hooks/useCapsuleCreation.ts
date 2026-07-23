@@ -2,12 +2,19 @@
 // Orchestrates the full capsule creation pipeline: resize → randomise → persist.
 
 import { useState, useCallback } from "react";
-import * as FileSystem from "expo-file-system/legacy";
 import { Capsule, createCapsule } from "../models/Capsule";
 import { resizeImage } from "../utils/imageResizer";
 import { randomCapsuleParams } from "../utils/randomiser";
 import { capsuleRepository } from "../storage/capsuleRepository";
 import { generateUUID } from "../utils/uuid";
+
+// Lazy-require native-only module — unavailable on web
+let FileSystemModule: typeof import("expo-file-system/legacy") | null = null;
+try {
+  FileSystemModule = require("expo-file-system/legacy");
+} catch {
+  // Native module not available (web)
+}
 
 interface UseCapsuleCreationResult {
   isCreating: boolean;
@@ -31,19 +38,19 @@ export function useCapsuleCreation(): UseCapsuleCreationResult {
         const { fullUri, thumbnailUri } = await resizeImage(imageUri);
 
         // 3. Copy resized image to app's document directory for persistence
-        const destDir = (FileSystem.documentDirectory ?? "") + "images/";
-        const dirInfo = await FileSystem.getInfoAsync(destDir);
-        if (!dirInfo.exists) {
-          await FileSystem.makeDirectoryAsync(destDir, { intermediates: true });
+        const destDir = (FileSystemModule?.documentDirectory ?? "") + "images/";
+        const dirInfo = await FileSystemModule?.getInfoAsync(destDir);
+        if (!dirInfo?.exists) {
+          await FileSystemModule?.makeDirectoryAsync(destDir, { intermediates: true });
         }
 
         const filename = `${capsuleId}.jpg`;
         const destUri = destDir + filename;
-        await FileSystem.copyAsync({ from: fullUri, to: destUri });
+        await FileSystemModule?.copyAsync({ from: fullUri, to: destUri });
 
         const thumbFilename = `${capsuleId}_thumb.jpg`;
         const thumbDestUri = destDir + thumbFilename;
-        await FileSystem.copyAsync({ from: thumbnailUri, to: thumbDestUri });
+        await FileSystemModule?.copyAsync({ from: thumbnailUri, to: thumbDestUri });
 
         // 4. Randomise capsule properties
         const { color, rarity } = randomCapsuleParams();

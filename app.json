@@ -29,6 +29,9 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
+    "experiments": {
+      "baseUrl": "/capsule-cam"
+    },
     "plugins": [
       "expo-sharing",
       "expo-splash-screen",

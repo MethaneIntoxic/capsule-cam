@@ -1,9 +1,18 @@
 // src/hooks/useSound.ts
-// Preload and play sound effects. Gracefully handles missing files.
+// Preload and play sound effects. Gracefully handles missing files and web.
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Audio } from "expo-av";
 import { settingsRepository } from "../storage/settingsRepository";
+
+// Lazy-require native module — no-op on web
+let AudioModule: any = null;
+let SoundClass: any = null;
+try {
+  AudioModule = require("expo-av");
+  SoundClass = AudioModule.Audio?.Sound ?? AudioModule.Sound;
+} catch {
+  // Native module not available (web)
+}
 
 type SoundName =
   | "handleClick"
@@ -24,13 +33,16 @@ const SOUND_MAP: Record<SoundName, string> = {
 
 export function useSound() {
   const [isMuted, setIsMuted] = useState(false);
-  const soundRefs = useRef<Record<string, Audio.Sound | null>>({});
+  const soundRefs = useRef<Record<string, any | null>>({});
 
   useEffect(() => {
-    // Load mute setting
     settingsRepository.get().then((s) => setIsMuted(s.isMuted));
 
-    // Preload sounds (silently fail if assets don't exist yet)
+    if (!AudioModule) return; // web — no sound
+
+    const Audio = AudioModule.Audio;
+    if (!Audio) return;
+
     const loadSounds = async () => {
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: false });
       for (const [key, filename] of Object.entries(SOUND_MAP)) {
@@ -41,7 +53,6 @@ export function useSound() {
           );
           soundRefs.current[key] = sound;
         } catch {
-          // Sound file may not exist yet (Phase 2 asset)
           soundRefs.current[key] = null;
         }
       }
@@ -49,7 +60,6 @@ export function useSound() {
     loadSounds();
 
     return () => {
-      // Unload all sounds
       for (const sound of Object.values(soundRefs.current)) {
         sound?.unloadAsync().catch(() => {});
       }
@@ -58,14 +68,12 @@ export function useSound() {
 
   const play = useCallback(
     async (name: SoundName) => {
-      if (isMuted) return;
+      if (isMuted || !AudioModule) return;
       const sound = soundRefs.current[name];
       if (!sound) return;
       try {
         await sound.replayAsync();
-      } catch {
-        // Silently fail
-      }
+      } catch {}
     },
     [isMuted]
   );

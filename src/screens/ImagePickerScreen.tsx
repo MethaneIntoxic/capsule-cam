@@ -14,7 +14,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
+
+let ImagePickerModule: typeof import("expo-image-picker") | null = null;
+try {
+  ImagePickerModule = require("expo-image-picker");
+} catch {
+  // Native module not available (web)
+}
 
 export default function ImagePickerScreen() {
   const router = useRouter();
@@ -26,15 +32,21 @@ export default function ImagePickerScreen() {
   // Request camera permission on mount
   useEffect(() => {
     (async () => {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        // We'll handle denial gracefully when user tries to take a photo
+      if (ImagePickerModule) {
+        const { status } = await ImagePickerModule.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+          // We'll handle denial gracefully when user tries to take a photo
+        }
       }
     })();
   }, []);
 
   const takePhoto = async () => {
-    const result = await ImagePicker.launchCameraAsync({
+    if (!ImagePickerModule) {
+      Alert.alert("Not Available", "Camera is not available on this platform.");
+      return;
+    }
+    const result = await ImagePickerModule.launchCameraAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
       aspect: cropMode === "square" ? [1, 1] : [3, 4],
@@ -46,7 +58,11 @@ export default function ImagePickerScreen() {
   };
 
   const pickFromGallery = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!ImagePickerModule) {
+      Alert.alert("Not Available", "Gallery is not available on this platform.");
+      return;
+    }
+    const { status } = await ImagePickerModule.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
         "Permission Required",
@@ -54,7 +70,7 @@ export default function ImagePickerScreen() {
       );
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePickerModule.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
       aspect: cropMode === "square" ? [1, 1] : [3, 4],
