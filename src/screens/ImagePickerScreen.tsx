@@ -1,5 +1,5 @@
 // src/screens/ImagePickerScreen.tsx
-// Analog Camera Viewfinder — Photo capture / gallery picker with retro HUD & caption stamp.
+// High-End SLR Viewfinder — Photo capture & film stock selection.
 
 import React, { useState, useEffect } from "react";
 import {
@@ -15,25 +15,29 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useHaptics } from "../hooks/useHaptics";
+import { useSound } from "../hooks/useSound";
 
 let ImagePickerModule: typeof import("expo-image-picker") | null = null;
 try {
   ImagePickerModule = require("expo-image-picker");
 } catch {
-  // Native module unavailable
+  // Web fallback
 }
 
 const SAMPLE_PRESET_IMAGES = [
-  { label: "Retro Cat 🐱", uri: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop" },
-  { label: "Tokyo Neon 🌆", uri: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&auto=format&fit=crop" },
-  { label: "Sunset Vibes 🌅", uri: "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=600&auto=format&fit=crop" },
-  { label: "Vintage Skate 🛹", uri: "https://images.unsplash.com/photo-1520045892732-304bc3ac5d8e?w=600&auto=format&fit=crop" },
+  { label: "KODAK PORTRA", uri: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop" },
+  { label: "FUJI SUPERIA", uri: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&auto=format&fit=crop" },
+  { label: "CINESTILL 800", uri: "https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=600&auto=format&fit=crop" },
+  { label: "ILFORD B&W", uri: "https://images.unsplash.com/photo-1520045892732-304bc3ac5d8e?w=600&auto=format&fit=crop" },
 ];
 
 export default function ImagePickerScreen() {
   const router = useRouter();
+  const haptics = useHaptics();
+  const sound = useSound();
   const [selectedImage, setSelectedImage] = useState<string | null>(SAMPLE_PRESET_IMAGES[0]?.uri ?? null);
-  const [caption, setCaption] = useState("VIBIN' IN THE ARCADE ✦");
+  const [caption, setCaption] = useState("LEICA M3 MEMORY ✦");
   const [isProcessing, setIsProcessing] = useState(false);
   const [cropMode, setCropMode] = useState<"square" | "portrait">("square");
 
@@ -46,8 +50,10 @@ export default function ImagePickerScreen() {
   }, []);
 
   const takePhoto = async () => {
+    haptics.selection();
+    sound.play("handleClick");
     if (!ImagePickerModule) {
-      Alert.alert("Camera Warning", "Camera hardware not detected. Select a preset below!");
+      Alert.alert("Camera Notice", "Select a film stock sample below!");
       return;
     }
     try {
@@ -59,15 +65,18 @@ export default function ImagePickerScreen() {
       });
       if (!result.canceled && result.assets[0]) {
         setSelectedImage(result.assets[0].uri);
+        haptics.activate();
       }
     } catch {
-      Alert.alert("Camera Notice", "Using preset photo selection!");
+      Alert.alert("Camera Notice", "Select a film stock sample below!");
     }
   };
 
   const pickFromGallery = async () => {
+    haptics.selection();
+    sound.play("handleClick");
     if (!ImagePickerModule) {
-      Alert.alert("Gallery Warning", "Gallery not available. Select a preset below!");
+      Alert.alert("Gallery Notice", "Select a film stock sample below!");
       return;
     }
     try {
@@ -84,14 +93,17 @@ export default function ImagePickerScreen() {
       });
       if (!result.canceled && result.assets[0]) {
         setSelectedImage(result.assets[0].uri);
+        haptics.activate();
       }
     } catch {
-      Alert.alert("Gallery Notice", "Select a sample preset below!");
+      Alert.alert("Gallery Notice", "Select a sample below!");
     }
   };
 
   const handleInsert = () => {
     if (!selectedImage) return;
+    haptics.heavyLock();
+    sound.play("handleClick");
     setIsProcessing(true);
     router.push({
       pathname: "/machine",
@@ -107,19 +119,27 @@ export default function ImagePickerScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Top Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Text style={styles.backBtnText}>← BACK</Text>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              haptics.selection();
+              router.back();
+            }}
+          >
+            <Text style={styles.backBtnText}>← RETURN</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>CAMERA VIEWFINDER</Text>
-          <View style={{ width: 60 }} />
+          <View style={styles.titleBadge}>
+            <Text style={styles.headerTitle}>SLR VIEWFINDER</Text>
+          </View>
+          <View style={{ width: 70 }} />
         </View>
 
         {/* Viewfinder Frame Overlay */}
         <View style={styles.viewfinderContainer}>
           <View style={styles.hudTopRow}>
             <Text style={styles.hudBadge}>ISO 400</Text>
-            <Text style={styles.hudBadge}>1/250s</Text>
-            <Text style={[styles.hudBadge, { color: "#FFD700" }]}>EXP 01/36</Text>
+            <Text style={styles.hudBadge}>1/500S</Text>
+            <Text style={[styles.hudBadge, { color: "#D4AF37" }]}>FRAME 01/36</Text>
           </View>
 
           {/* Viewfinder Target */}
@@ -135,8 +155,8 @@ export default function ImagePickerScreen() {
               />
             ) : (
               <View style={styles.placeholderBox}>
-                <Text style={styles.placeholderIcon}>📷</Text>
-                <Text style={styles.placeholderText}>NO PHOTO SELECTED</Text>
+                <Text style={styles.placeholderIcon}>◈</Text>
+                <Text style={styles.placeholderText}>NO FRAME LOADED</Text>
               </View>
             )}
 
@@ -155,19 +175,24 @@ export default function ImagePickerScreen() {
 
         {/* Actions Row */}
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.actionBtn} onPress={takePhoto}>
+          <TouchableOpacity style={styles.actionBtn} onPress={takePhoto} activeOpacity={0.8}>
             <Text style={styles.actionIcon}>📸</Text>
             <Text style={styles.actionText}>SHUTTER</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionBtn} onPress={pickFromGallery}>
+          <TouchableOpacity style={styles.actionBtn} onPress={pickFromGallery} activeOpacity={0.8}>
             <Text style={styles.actionIcon}>🖼️</Text>
             <Text style={styles.actionText}>GALLERY</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.actionBtn}
-            onPress={() => setCropMode(cropMode === "square" ? "portrait" : "square")}
+            onPress={() => {
+              haptics.selection();
+              sound.play("handleClick");
+              setCropMode(cropMode === "square" ? "portrait" : "square");
+            }}
+            activeOpacity={0.8}
           >
             <Text style={styles.actionIcon}>📐</Text>
             <Text style={styles.actionText}>
@@ -191,7 +216,7 @@ export default function ImagePickerScreen() {
 
         {/* Preset Photos Selection Bar */}
         <View style={styles.presetsSection}>
-          <Text style={styles.presetsTitle}>SAMPLE PHOTOS</Text>
+          <Text style={styles.presetsTitle}>FILM STOCK PRESETS</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsList}>
             {SAMPLE_PRESET_IMAGES.map((preset, idx) => (
               <TouchableOpacity
@@ -200,7 +225,12 @@ export default function ImagePickerScreen() {
                   styles.presetChip,
                   selectedImage === preset.uri && styles.presetChipActive,
                 ]}
-                onPress={() => setSelectedImage(preset.uri)}
+                onPress={() => {
+                  haptics.selection();
+                  sound.play("handleClick");
+                  setSelectedImage(preset.uri);
+                }}
+                activeOpacity={0.8}
               >
                 <Image source={{ uri: preset.uri }} style={styles.presetThumb} />
                 <Text style={styles.presetText}>{preset.label}</Text>
@@ -219,7 +249,7 @@ export default function ImagePickerScreen() {
           {isProcessing ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.feedBtnText}>🎰 FEED PHOTO INTO MACHINE →</Text>
+            <Text style={styles.feedBtnText}>✦ LOAD FRAME INTO GASHAPON →</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -228,8 +258,8 @@ export default function ImagePickerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0F0D15" },
-  content: { padding: 20, gap: 14 },
+  container: { flex: 1, backgroundColor: "#0D0E12" },
+  content: { padding: 18, gap: 14 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -237,20 +267,28 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   backBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+  },
+  backBtnText: { fontSize: 11, fontWeight: "900", color: "#D4AF37", letterSpacing: 1.5 },
+  titleBadge: {
+    paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "#16161C",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
-  backBtnText: { fontSize: 12, fontWeight: "800", color: "#FFB703" },
-  headerTitle: { fontSize: 15, fontWeight: "900", color: "#FFF", letterSpacing: 1.5 },
+  headerTitle: { fontSize: 13, fontWeight: "900", color: "#E2DFD7", letterSpacing: 2 },
   viewfinderContainer: {
-    backgroundColor: "#161522",
+    backgroundColor: "#16161C",
     borderRadius: 24,
     padding: 16,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "rgba(255, 255, 255, 0.12)",
     alignItems: "center",
   },
@@ -264,92 +302,92 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     color: "#00E5FF",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   previewBox: {
     width: "100%",
     aspectRatio: 1,
     borderRadius: 16,
-    backgroundColor: "#0A0910",
+    backgroundColor: "#0A0A0E",
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
-    borderWidth: 2,
-    borderColor: "#FFB703",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
   previewImage: { borderRadius: 12 },
   previewSquare: { width: "94%", height: "94%" },
   previewPortrait: { width: "75%", height: "94%" },
   placeholderBox: { justifyContent: "center", alignItems: "center" },
-  placeholderIcon: { fontSize: 40, marginBottom: 8 },
-  placeholderText: { fontSize: 12, fontWeight: "800", color: "#666", letterSpacing: 1 },
-  crosshairTL: { position: "absolute", top: 10, left: 10, width: 14, height: 14, borderTopWidth: 2, borderLeftWidth: 2, borderColor: "#FFB703" },
-  crosshairTR: { position: "absolute", top: 10, right: 10, width: 14, height: 14, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#FFB703" },
-  crosshairBL: { position: "absolute", bottom: 10, left: 10, width: 14, height: 14, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: "#FFB703" },
-  crosshairBR: { position: "absolute", bottom: 10, right: 10, width: 14, height: 14, borderBottomWidth: 2, borderRightWidth: 2, borderColor: "#FFB703" },
-  dateStamp: { position: "absolute", bottom: 14, right: 16, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  dateStampText: { fontSize: 12, fontWeight: "900", color: "#FF5E36", fontFamily: "monospace" },
+  placeholderIcon: { fontSize: 32, color: "#D4AF37", marginBottom: 8 },
+  placeholderText: { fontSize: 11, fontWeight: "900", color: "#666", letterSpacing: 1.5 },
+  crosshairTL: { position: "absolute", top: 12, left: 12, width: 14, height: 14, borderTopWidth: 2, borderLeftWidth: 2, borderColor: "#D4AF37" },
+  crosshairTR: { position: "absolute", top: 12, right: 12, width: 14, height: 14, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#D4AF37" },
+  crosshairBL: { position: "absolute", bottom: 12, left: 12, width: 14, height: 14, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: "#D4AF37" },
+  crosshairBR: { position: "absolute", bottom: 12, right: 12, width: 14, height: 14, borderBottomWidth: 2, borderRightWidth: 2, borderColor: "#D4AF37" },
+  dateStamp: { position: "absolute", bottom: 14, right: 16, backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  dateStampText: { fontSize: 11, fontWeight: "900", color: "#FF5E36", fontFamily: "monospace" },
   actionRow: { flexDirection: "row", gap: 10 },
   actionBtn: {
     flex: 1,
-    backgroundColor: "#1D182A",
-    paddingVertical: 12,
+    backgroundColor: "#16161C",
+    paddingVertical: 14,
     borderRadius: 14,
     alignItems: "center",
     borderWidth: 1.5,
     borderColor: "rgba(255, 255, 255, 0.12)",
     gap: 4,
   },
-  actionIcon: { fontSize: 20 },
-  actionText: { fontSize: 10, fontWeight: "900", color: "#FFF", letterSpacing: 0.5 },
+  actionIcon: { fontSize: 18 },
+  actionText: { fontSize: 10, fontWeight: "900", color: "#E2DFD7", letterSpacing: 1 },
   inputCard: {
-    backgroundColor: "#161522",
+    backgroundColor: "#16161C",
     borderRadius: 18,
     padding: 14,
     borderWidth: 1.5,
     borderColor: "rgba(255, 255, 255, 0.08)",
   },
-  inputLabel: { fontSize: 10, fontWeight: "800", color: "#FFB703", letterSpacing: 1, marginBottom: 8 },
+  inputLabel: { fontSize: 10, fontWeight: "900", color: "#D4AF37", letterSpacing: 1.5, marginBottom: 8 },
   captionInput: {
     borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: "rgba(255,255,255,0.12)",
     borderRadius: 12,
     padding: 12,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: "#FFF",
-    backgroundColor: "#0D0E15",
+    backgroundColor: "#0A0A0E",
   },
   presetsSection: { gap: 8 },
-  presetsTitle: { fontSize: 11, fontWeight: "800", color: "#00E5FF", letterSpacing: 1 },
+  presetsTitle: { fontSize: 11, fontWeight: "900", color: "#00E5FF", letterSpacing: 1.5 },
   presetsList: { gap: 10 },
   presetChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#161522",
-    paddingRight: 12,
-    borderRadius: 12,
+    backgroundColor: "#16161C",
+    paddingRight: 14,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.1)",
     gap: 8,
   },
-  presetChipActive: { borderColor: "#FFB703", backgroundColor: "#252033" },
-  presetThumb: { width: 32, height: 32, borderRadius: 8 },
-  presetText: { fontSize: 11, fontWeight: "800", color: "#FFF" },
+  presetChipActive: { borderColor: "#D4AF37", backgroundColor: "#22222B" },
+  presetThumb: { width: 34, height: 34, borderRadius: 10 },
+  presetText: { fontSize: 10, fontWeight: "900", color: "#E2DFD7", letterSpacing: 1 },
   feedBtn: {
     paddingVertical: 18,
     borderRadius: 18,
-    backgroundColor: "#E63946",
+    backgroundColor: "#C8372D",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: "#FFB703",
-    shadowColor: "#E63946",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
+    shadowColor: "#C8372D",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
     elevation: 8,
   },
   feedBtnDisabled: { opacity: 0.4 },
-  feedBtnText: { fontSize: 16, fontWeight: "900", color: "#FFF", letterSpacing: 1 },
+  feedBtnText: { fontSize: 15, fontWeight: "900", color: "#FFF", letterSpacing: 1.5 },
 });

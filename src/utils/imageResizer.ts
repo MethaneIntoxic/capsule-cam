@@ -1,5 +1,5 @@
 // src/utils/imageResizer.ts
-// Resize images after selection to ensure performant rendering.
+// Resize images after selection for performant rendering.
 
 import * as ImageManipulator from "expo-image-manipulator";
 
@@ -9,20 +9,29 @@ export interface ResizedImages {
 }
 
 /**
- * Resize an image to max 1024×1024 for storage (full) and 256×256 for thumbnails.
+ * Resize image safely. Returns original URI on web/http/error.
  */
 export async function resizeImage(uri: string): Promise<ResizedImages> {
-  const full = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: 1024, height: 1024 } }],
-    { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
-  );
+  if (!uri || uri.startsWith("http") || uri.startsWith("data:")) {
+    return { fullUri: uri, thumbnailUri: uri };
+  }
 
-  const thumb = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: 256, height: 256 } }],
-    { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-  );
+  try {
+    const full = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 1024, height: 1024 } }],
+      { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
+    );
 
-  return { fullUri: full.uri, thumbnailUri: thumb.uri };
+    const thumb = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 256, height: 256 } }],
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
+
+    return { fullUri: full.uri, thumbnailUri: thumb.uri };
+  } catch {
+    return { fullUri: uri, thumbnailUri: uri };
+  }
 }
+

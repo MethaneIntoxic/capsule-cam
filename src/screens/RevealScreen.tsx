@@ -1,5 +1,5 @@
 // src/screens/RevealScreen.tsx
-// Capsule reveal screen — shows the capsule, swipe to open, then the photo card.
+// High-End Capsule Reveal — Spring-loaded unboxing and foil photo card presentation.
 
 import React, { useEffect, useState } from "react";
 import {
@@ -8,7 +8,6 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -16,14 +15,15 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSpring,
   runOnJS,
-  Easing,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Capsule, CAPSULE_COLOR_HEX } from "../models/Capsule";
 import { useCollectionContext } from "../state/CollectionContext";
 import { useHaptics } from "../hooks/useHaptics";
+import { useSound } from "../hooks/useSound";
 import CapsuleCard from "../components/CapsuleCard";
 import RarityBadge from "../components/RarityBadge";
 import { DURATIONS } from "../animations/machineAnimations";
@@ -36,6 +36,7 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const haptics = useHaptics();
+  const sound = useSound();
   const { updateCapsule, getCapsule } = useCollectionContext();
   const [capsule, setCapsule] = useState<Capsule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,11 +53,10 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
       const c = await getCapsule(capsuleId);
       setCapsule(c);
       setIsLoading(false);
-      // Auto-open if already opened
       if (c?.isOpened) {
         setIsOpened(true);
-        topHalfTranslate.value = -80;
-        bottomHalfTranslate.value = 20;
+        topHalfTranslate.value = -90;
+        bottomHalfTranslate.value = 30;
         cardScale.value = 1;
         cardOpacity.value = 1;
       }
@@ -65,32 +65,21 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
 
   const handleOpen = () => {
     if (isOpened) return;
-    haptics.tick();
+    haptics.selection();
+    sound.play("capsuleOpen");
 
-    // Animate top half up and bottom half down
-    topHalfTranslate.value = withTiming(-80, {
-      duration: DURATIONS.OPEN,
-      easing: Easing.out(Easing.back(1.5)),
-    });
+    topHalfTranslate.value = withSpring(-90, { stiffness: 180, damping: 14 });
+    bottomHalfTranslate.value = withSpring(30, { stiffness: 180, damping: 14 });
 
-    bottomHalfTranslate.value = withTiming(20, {
-      duration: DURATIONS.OPEN,
-      easing: Easing.out(Easing.back(1.2)),
-    });
-
-    // Card appears after a delay
     setTimeout(() => {
-      cardScale.value = withTiming(1, {
-        duration: DURATIONS.REVEAL,
-        easing: Easing.out(Easing.back(1.2)),
-      });
+      cardScale.value = withSpring(1, { stiffness: 200, damping: 15 });
       cardOpacity.value = withTiming(1, { duration: DURATIONS.REVEAL });
       haptics.reveal();
-    }, DURATIONS.OPEN * 0.6);
+      sound.play("revealChime");
+    }, 200);
 
     setIsOpened(true);
 
-    // Mark capsule as opened via context (upserts to AsyncStorage + React state)
     if (capsule && !capsule.isOpened) {
       const updated = { ...capsule, isOpened: true, openedAt: new Date().toISOString() };
       updateCapsule(updated);
@@ -98,15 +87,21 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
     }
   };
 
-  // Swipe gesture to open
   const swipeGesture = Gesture.Pan()
     .enabled(!isOpened)
-    .minDistance(30)
+    .minDistance(20)
     .onEnd(() => {
       runOnJS(handleOpen)();
     });
 
-  // Animated styles
+  const tapGesture = Gesture.Tap()
+    .enabled(!isOpened)
+    .onEnd(() => {
+      runOnJS(handleOpen)();
+    });
+
+  const combinedGesture = Gesture.Simultaneous(swipeGesture, tapGesture);
+
   const topHalfStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: topHalfTranslate.value }],
   }));
@@ -124,7 +119,7 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#FFD700" />
+          <ActivityIndicator size="large" color="#D4AF37" />
         </View>
       </SafeAreaView>
     );
@@ -134,9 +129,9 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <Text style={styles.errorText}>Capsule not found.</Text>
+          <Text style={styles.errorText}>Capsule record not found.</Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backLink}>← Go Back</Text>
+            <Text style={styles.backLink}>← Return</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -150,44 +145,27 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
       <View style={[styles.content, { paddingTop: insets.top + 8 }]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backBtn}>← Back</Text>
+          <TouchableOpacity
+            style={styles.backBtnContainer}
+            onPress={() => {
+              haptics.selection();
+              router.back();
+            }}
+          >
+            <Text style={styles.backBtn}>← RETURN</Text>
           </TouchableOpacity>
           <RarityBadge rarity={capsule.rarity} />
         </View>
 
-        {/* Capsule Area */}
+        {/* Capsule Unboxing Stage */}
         <View style={styles.capsuleArea}>
-          {!isOpened ? (
-            <GestureDetector gesture={swipeGesture}>
-              <View style={styles.capsuleWrapper}>
-                {/* Top half */}
-                <Animated.View
-                  style={[
-                    styles.capsuleHalf,
-                    styles.capsuleTop,
-                    { backgroundColor: colorHex },
-                    topHalfStyle,
-                  ]}
-                >
-                  <View style={styles.glossTop} />
-                </Animated.View>
-                {/* Bottom half */}
-                <Animated.View
-                  style={[
-                    styles.capsuleHalf,
-                    styles.capsuleBottom,
-                    { backgroundColor: colorHex },
-                    bottomHalfStyle,
-                  ]}
-                >
-                  <View style={styles.glossBottom} />
-                </Animated.View>
-              </View>
-            </GestureDetector>
-          ) : (
-            <View style={styles.capsuleWrapper}>
-              {/* Show opened halves, slightly separated */}
+          <GestureDetector gesture={combinedGesture}>
+            <TouchableOpacity
+              activeOpacity={!isOpened ? 0.9 : 1}
+              onPress={handleOpen}
+              style={styles.capsuleWrapper}
+            >
+              {/* Top half */}
               <Animated.View
                 style={[
                   styles.capsuleHalf,
@@ -198,6 +176,7 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
               >
                 <View style={styles.glossTop} />
               </Animated.View>
+              {/* Bottom half */}
               <Animated.View
                 style={[
                   styles.capsuleHalf,
@@ -208,38 +187,46 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
               >
                 <View style={styles.glossBottom} />
               </Animated.View>
-            </View>
-          )}
+            </TouchableOpacity>
+          </GestureDetector>
 
-          {/* Revealed Card */}
+          {/* Revealed Polaroid Card */}
           <Animated.View style={[styles.cardContainer, cardStyle]}>
             <CapsuleCard capsule={capsule} />
           </Animated.View>
         </View>
 
-        {/* Instruction / Action buttons */}
+        {/* Bottom Actions */}
         <View style={styles.bottomArea}>
           {!isOpened ? (
-            <View style={styles.instructionRow}>
-              <Text style={styles.instructionText}>Swipe up to open</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.instructionRow}
+              onPress={handleOpen}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.instructionText}>✦ TAP OR SWIPE UP TO UNBOX CAPSULE ✦</Text>
+            </TouchableOpacity>
           ) : (
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => {
+                  haptics.selection();
+                  sound.play("handleClick");
                   router.push({ pathname: "/collection" });
                 }}
               >
-                <Text style={styles.actionBtnText}>📦 Collection</Text>
+                <Text style={styles.actionBtnText}>📦 BINDER</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionBtn, styles.secondaryBtn]}
                 onPress={() => {
+                  haptics.selection();
+                  sound.play("handleClick");
                   router.push("/capture");
                 }}
               >
-                <Text style={styles.actionBtnText}>🔄 New</Text>
+                <Text style={styles.actionBtnText}>📸 NEW FRAME</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -250,18 +237,26 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#1A1A2E" },
-  content: { flex: 1, paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: "#0D0E12" },
+  content: { flex: 1, paddingHorizontal: 18 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorText: { fontSize: 16, color: "#B0B0B0", marginBottom: 16 },
-  backLink: { fontSize: 16, color: "#FFD700" },
+  errorText: { fontSize: 14, color: "#888890", marginBottom: 16 },
+  backLink: { fontSize: 14, color: "#D4AF37", fontWeight: "900" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  backBtn: { fontSize: 16, color: "#FFD700" },
+  backBtnContainer: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+  },
+  backBtn: { fontSize: 11, fontWeight: "900", color: "#D4AF37", letterSpacing: 1.5 },
   capsuleArea: {
     flex: 1,
     justifyContent: "center",
@@ -272,74 +267,78 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     height: 180,
     marginBottom: 20,
+    zIndex: 1,
   },
   capsuleHalf: {
-    width: 120,
-    height: 60,
+    width: 130,
+    height: 65,
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.3)",
+    borderColor: "rgba(255,255,255,0.4)",
   },
   capsuleTop: {
-    borderTopLeftRadius: 60,
-    borderTopRightRadius: 60,
+    borderTopLeftRadius: 65,
+    borderTopRightRadius: 65,
     borderBottomWidth: 0,
     marginBottom: -2,
   },
   capsuleBottom: {
-    borderBottomLeftRadius: 60,
-    borderBottomRightRadius: 60,
+    borderBottomLeftRadius: 65,
+    borderBottomRightRadius: 65,
     borderTopWidth: 0,
   },
   glossTop: {
     position: "absolute",
     top: 8,
-    left: 16,
-    right: 16,
+    left: 18,
+    right: 18,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(255,255,255,0.3)",
   },
   glossBottom: {
     position: "absolute",
     top: 6,
-    left: 16,
-    right: 16,
+    left: 18,
+    right: 18,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.25)",
   },
   cardContainer: {
     position: "absolute",
     alignItems: "center",
+    zIndex: 10,
   },
   bottomArea: {
-    paddingVertical: 24,
+    paddingVertical: 20,
     alignItems: "center",
   },
   instructionRow: {
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    backgroundColor: "rgba(255,215,0,0.15)",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    backgroundColor: "#16161C",
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#FFD700",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
-  instructionText: { fontSize: 16, fontWeight: "600", color: "#FFD700" },
+  instructionText: { fontSize: 12, fontWeight: "900", color: "#D4AF37", letterSpacing: 1.5 },
   actionRow: {
     flexDirection: "row",
     gap: 12,
     width: "100%",
-    paddingHorizontal: 20,
   },
   actionBtn: {
     flex: 1,
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: "#D32F2F",
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: "#C8372D",
     alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
   secondaryBtn: {
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "#16161C",
+    borderColor: "rgba(255,255,255,0.15)",
   },
-  actionBtnText: { fontSize: 16, fontWeight: "700", color: "#FFF" },
+  actionBtnText: { fontSize: 13, fontWeight: "900", color: "#FFF", letterSpacing: 1 },
 });

@@ -31,43 +31,45 @@ export function useCapsuleCreation(): UseCapsuleCreationResult {
       setIsCreating(true);
       setError(null);
       try {
-        // 1. Pre-generate ID for consistent filenames
         const capsuleId = generateUUID();
+        let finalImageUri = imageUri;
+        let finalThumbUri = imageUri;
 
-        // 2. Resize image for performance
-        const { fullUri, thumbnailUri } = await resizeImage(imageUri);
+        try {
+          const { fullUri, thumbnailUri } = await resizeImage(imageUri);
+          finalImageUri = fullUri;
+          finalThumbUri = thumbnailUri;
 
-        // 3. Copy resized image to app's document directory for persistence
-        const destDir = (FileSystemModule?.documentDirectory ?? "") + "images/";
-        const dirInfo = await FileSystemModule?.getInfoAsync(destDir);
-        if (!dirInfo?.exists) {
-          await FileSystemModule?.makeDirectoryAsync(destDir, { intermediates: true });
+          if (FileSystemModule && FileSystemModule.documentDirectory) {
+            const destDir = FileSystemModule.documentDirectory + "images/";
+            const dirInfo = await FileSystemModule.getInfoAsync(destDir);
+            if (!dirInfo?.exists) {
+              await FileSystemModule.makeDirectoryAsync(destDir, { intermediates: true });
+            }
+
+            const destUri = destDir + `${capsuleId}.jpg`;
+            await FileSystemModule.copyAsync({ from: fullUri, to: destUri });
+            finalImageUri = destUri;
+
+            const thumbDestUri = destDir + `${capsuleId}_thumb.jpg`;
+            await FileSystemModule.copyAsync({ from: thumbnailUri, to: thumbDestUri });
+            finalThumbUri = thumbDestUri;
+          }
+        } catch {
+          // Fall back to original URI if filesystem unavailable
         }
 
-        const filename = `${capsuleId}.jpg`;
-        const destUri = destDir + filename;
-        await FileSystemModule?.copyAsync({ from: fullUri, to: destUri });
-
-        const thumbFilename = `${capsuleId}_thumb.jpg`;
-        const thumbDestUri = destDir + thumbFilename;
-        await FileSystemModule?.copyAsync({ from: thumbnailUri, to: thumbDestUri });
-
-        // 4. Randomise capsule properties
         const { color, rarity } = randomCapsuleParams();
-
-        // 5. Build capsule object with the pre-generated ID
         const capsule = createCapsule({
           id: capsuleId,
-          imageUri: destUri,
-          thumbnailUri: thumbDestUri,
+          imageUri: finalImageUri,
+          thumbnailUri: finalThumbUri,
           caption: caption ?? null,
           capsuleColor: color,
           rarity,
         });
 
-        // 6. Save immediately
         await capsuleRepository.save(capsule);
-
         return capsule;
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Failed to create capsule";

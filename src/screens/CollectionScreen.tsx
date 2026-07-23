@@ -1,5 +1,5 @@
 // src/screens/CollectionScreen.tsx
-// Collection shelf — displays all saved capsules in a grid.
+// High-End Collector Binder — displays saved capsules in a precision grid.
 
 import React, { useState, useCallback } from "react";
 import {
@@ -15,6 +15,8 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCollectionContext } from "../state/CollectionContext";
+import { useHaptics } from "../hooks/useHaptics";
+import { useSound } from "../hooks/useSound";
 import { Capsule, Rarity } from "../models/Capsule";
 import { RARITY_TABLE } from "../models/Rarity";
 import CapsuleThumbnail from "../components/CapsuleThumbnail";
@@ -29,6 +31,8 @@ type FilterOption = "all" | Rarity;
 export default function CollectionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const haptics = useHaptics();
+  const sound = useSound();
   const { capsules, removeCapsule, refresh } = useCollectionContext();
   const [activeFilter, setActiveFilter] = useState<FilterOption>("all");
 
@@ -39,44 +43,52 @@ export default function CollectionScreen() {
 
   const handleDelete = useCallback(
     (capsule: Capsule) => {
+      haptics.heavyLock();
+      sound.play("handleClick");
       Alert.alert(
         "Delete Capsule",
-        "This cannot be undone.",
+        "This capsule will be permanently removed from your binder.",
         [
           { text: "Cancel", style: "cancel" },
           {
             text: "Delete",
             style: "destructive",
-            onPress: () => removeCapsule(capsule.id),
+            onPress: () => {
+              haptics.impact();
+              removeCapsule(capsule.id);
+            },
           },
         ]
       );
     },
-    [removeCapsule]
+    [removeCapsule, haptics, sound]
   );
 
   const renderItem = useCallback(
     ({ item }: { item: Capsule }) => (
       <TouchableOpacity
-        onPress={() =>
+        onPress={() => {
+          haptics.selection();
+          sound.play("handleClick");
           router.push({
             pathname: "/reveal",
             params: { capsuleId: item.id },
-          })
-        }
+          });
+        }}
         onLongPress={() => handleDelete(item)}
+        activeOpacity={0.85}
       >
         <CapsuleThumbnail capsule={item} size={ITEM_SIZE} />
       </TouchableOpacity>
     ),
-    [router, handleDelete, ITEM_SIZE]
+    [router, handleDelete, haptics, sound, ITEM_SIZE]
   );
 
   const filterTabs: { key: FilterOption; label: string }[] = [
-    { key: "all", label: "All" },
+    { key: "all", label: "ALL" },
     ...RARITY_TABLE.map((r) => ({
       key: r.rarity as FilterOption,
-      label: r.label,
+      label: r.label.toUpperCase(),
     })),
   ];
 
@@ -85,12 +97,26 @@ export default function CollectionScreen() {
       <View style={[styles.content, { paddingTop: insets.top + 8 }]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backBtn}>← Back</Text>
+          <TouchableOpacity
+            style={styles.backBtnContainer}
+            onPress={() => {
+              haptics.selection();
+              router.back();
+            }}
+          >
+            <Text style={styles.backBtn}>← RETURN</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Collection</Text>
-          <TouchableOpacity onPress={refresh}>
-            <Text style={styles.refreshBtn}>🔄</Text>
+          <View style={styles.titleBadge}>
+            <Text style={styles.headerTitle}>COLLECTION BINDER</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={() => {
+              haptics.selection();
+              refresh();
+            }}
+          >
+            <Text style={styles.refreshIcon}>↻</Text>
           </TouchableOpacity>
         </View>
 
@@ -103,7 +129,12 @@ export default function CollectionScreen() {
                 styles.filterTab,
                 activeFilter === tab.key && styles.filterTabActive,
               ]}
-              onPress={() => setActiveFilter(tab.key)}
+              onPress={() => {
+                haptics.selection();
+                sound.play("handleClick");
+                setActiveFilter(tab.key);
+              }}
+              activeOpacity={0.8}
             >
               <Text
                 style={[
@@ -120,16 +151,21 @@ export default function CollectionScreen() {
         {/* Grid */}
         {filteredCapsules.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📦</Text>
-            <Text style={styles.emptyText}>No capsules yet.</Text>
+            <Text style={styles.emptyIcon}>◈</Text>
+            <Text style={styles.emptyText}>No Capsules Secured</Text>
             <Text style={styles.emptySubtext}>
-              Create your first capsule!
+              Create your first 35mm capsule frame to populate your binder.
             </Text>
             <TouchableOpacity
               style={styles.createLink}
-              onPress={() => router.push("/capture")}
+              onPress={() => {
+                haptics.selection();
+                sound.play("handleClick");
+                router.push("/capture");
+              }}
+              activeOpacity={0.85}
             >
-              <Text style={styles.createLinkText}>✨ Create a Capsule</Text>
+              <Text style={styles.createLinkText}>✦ CREATE NEW CAPSULE</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -154,17 +190,43 @@ export default function CollectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#1A1A2E" },
-  content: { flex: 1, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: "#0D0E12" },
+  content: { flex: 1, paddingHorizontal: 18 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  backBtn: { fontSize: 16, color: "#FFD700" },
-  headerTitle: { fontSize: 20, fontWeight: "700", color: "#FFF" },
-  refreshBtn: { fontSize: 20, color: "#B0B0B0" },
+  backBtnContainer: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+  },
+  backBtn: { fontSize: 11, fontWeight: "900", color: "#D4AF37", letterSpacing: 1.5 },
+  titleBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: "#16161C",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
+  },
+  headerTitle: { fontSize: 13, fontWeight: "900", color: "#E2DFD7", letterSpacing: 2 },
+  refreshBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "#16161C",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  refreshIcon: { fontSize: 16, color: "#D4AF37", fontWeight: "900" },
   filterRow: {
     flexDirection: "row",
     gap: 8,
@@ -173,19 +235,23 @@ const styles = StyleSheet.create({
   filterTab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 14,
+    backgroundColor: "#16161C",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   filterTabActive: {
-    backgroundColor: "#D32F2F",
+    backgroundColor: "#C8372D",
+    borderColor: "#D4AF37",
   },
   filterTabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#B0B0B0",
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#888890",
+    letterSpacing: 1,
   },
   filterTabTextActive: {
-    color: "#FFF",
+    color: "#FFFFFF",
   },
   grid: {
     paddingBottom: 40,
@@ -199,14 +265,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { fontSize: 18, fontWeight: "700", color: "#FFF", marginBottom: 4 },
-  emptySubtext: { fontSize: 14, color: "#B0B0B0", marginBottom: 20 },
+  emptyIcon: { fontSize: 36, color: "#D4AF37", marginBottom: 12 },
+  emptyText: { fontSize: 16, fontWeight: "900", color: "#E2DFD7", marginBottom: 6, letterSpacing: 0.5 },
+  emptySubtext: { fontSize: 12, color: "#777780", textAlign: "center", marginBottom: 20, paddingHorizontal: 30 },
   createLink: {
     paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: "#D32F2F",
-    borderRadius: 12,
+    paddingVertical: 14,
+    backgroundColor: "#C8372D",
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
-  createLinkText: { fontSize: 16, fontWeight: "700", color: "#FFF" },
+  createLinkText: { fontSize: 13, fontWeight: "900", color: "#FFF", letterSpacing: 1.5 },
 });

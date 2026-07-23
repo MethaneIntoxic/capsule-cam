@@ -1,5 +1,5 @@
 // src/screens/MachineScreen.tsx
-// Gashapon machine main interaction screen.
+// High-end Industrial Gashapon Machine interaction screen.
 
 import React, { useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMachineContext } from "../state/MachineContext";
 import { useHandleGesture } from "../hooks/useHandleGesture";
 import { useHaptics } from "../hooks/useHaptics";
+import { useSound } from "../hooks/useSound";
 import { useCapsuleCreation } from "../hooks/useCapsuleCreation";
 import { useCollectionContext } from "../state/CollectionContext";
 import { randomCapsuleParams } from "../utils/randomiser";
@@ -32,6 +33,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
   const insets = useSafeAreaInsets();
   const { state, actions } = useMachineContext();
   const haptics = useHaptics();
+  const sound = useSound();
   const creation = useCapsuleCreation();
   const { addCapsule } = useCollectionContext();
 
@@ -45,34 +47,38 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     actions.loadImage();
   }, []);
 
-  // Handle activation — create capsule and start shake
-  const handleActivate = useCallback(async () => {
-    haptics.activate();
+  // Handle activation — instant transition + rumble + sound
+  const handleActivate = useCallback(() => {
+    haptics.heavyLock();
+    haptics.startRumble();
+    sound.play("handleClick");
+    sound.play("capsuleRattle");
 
-    // Use creation pipeline
-    const capsule = await creation.create(imageUri, caption);
-    if (!capsule) {
-      const { color, rarity } = randomCapsuleParams();
-      const fallbackCapsule = createCapsule({
-        imageUri,
-        thumbnailUri: imageUri,
-        caption: caption ?? null,
-        capsuleColor: color,
-        rarity,
-      });
-      actions.activate(fallbackCapsule);
-    } else {
-      actions.activate(capsule);
-      await addCapsule(capsule);
-    }
+    // 1. Build immediate capsule object so state transitions instantly
+    const { color, rarity } = randomCapsuleParams();
+    const immediateCapsule = createCapsule({
+      imageUri,
+      thumbnailUri: imageUri,
+      caption: caption ?? null,
+      capsuleColor: color,
+      rarity,
+    });
 
-    // Run intense machine shake animation
-    machineShakeX.value = withTiming(10, { duration: 80 }, () => {
-      machineShakeX.value = withTiming(-10, { duration: 80 }, () => {
-        machineShakeX.value = withTiming(8, { duration: 80 }, () => {
-          machineShakeX.value = withTiming(-8, { duration: 80 }, () => {
-            machineShakeX.value = withTiming(4, { duration: 80 }, () => {
-              machineShakeX.value = withTiming(0, { duration: 80 }, () => {
+    actions.activate(immediateCapsule);
+    addCapsule(immediateCapsule);
+
+    // Save capsule asynchronously in background
+    creation.create(imageUri, caption).then((saved) => {
+      if (saved) addCapsule(saved);
+    });
+
+    // 2. Run intense machine shake animation
+    machineShakeX.value = withTiming(14, { duration: 70 }, () => {
+      machineShakeX.value = withTiming(-14, { duration: 70 }, () => {
+        machineShakeX.value = withTiming(10, { duration: 70 }, () => {
+          machineShakeX.value = withTiming(-10, { duration: 70 }, () => {
+            machineShakeX.value = withTiming(5, { duration: 70 }, () => {
+              machineShakeX.value = withTiming(0, { duration: 70 }, () => {
                 runOnJS(actions.shakeComplete)();
               });
             });
@@ -81,9 +87,10 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
       });
     });
 
-    // After shake, dispense capsule into tray
+    // 3. After shake, dispense capsule into tray
     setTimeout(() => {
       actions.dispenseComplete();
+      sound.play("capsuleDrop");
       capsuleOpacity.value = 1;
       capsuleDropY.value = withTiming(
         150,
@@ -93,11 +100,12 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
         },
         () => {
           runOnJS(haptics.impact)();
+          runOnJS(sound.play)("trayImpact");
           runOnJS(actions.dropComplete)();
         }
       );
     }, DURATIONS.SHAKE + 100);
-  }, [imageUri, caption, actions, haptics, creation, addCapsule, machineShakeX, capsuleDropY, capsuleOpacity]);
+  }, [imageUri, caption, actions, haptics, sound, creation, addCapsule, machineShakeX, capsuleDropY, capsuleOpacity]);
 
   const handleRotationChange = useCallback(
     (_degrees: number) => {
@@ -109,8 +117,9 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
   const handleHapticTick = useCallback(
     (_tick: number) => {
       haptics.tick();
+      sound.play("handleClick");
     },
-    [haptics]
+    [haptics, sound]
   );
 
   const { gesture, handleStyle, triggerFullTurn } = useHandleGesture({
@@ -123,18 +132,20 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
   const handleOpen = useCallback(() => {
     if (state.phase !== "landed") return;
     actions.startOpening();
-    haptics.tick();
+    haptics.selection();
+    sound.play("capsuleOpen");
 
     setTimeout(() => {
       actions.openComplete();
       haptics.reveal();
+      sound.play("revealChime");
 
       if (state.currentCapsule) {
         addCapsule(state.currentCapsule);
         actions.saveComplete();
       }
     }, DURATIONS.OPEN);
-  }, [state.phase, state.currentCapsule, actions, haptics, addCapsule]);
+  }, [state.phase, state.currentCapsule, actions, haptics, sound, addCapsule]);
 
   const machineStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: machineShakeX.value }],
@@ -148,21 +159,21 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
   const promptText = () => {
     switch (state.phase) {
       case "ready":
-        return "Crank the knob or tap TURN to dispense! ↻";
+        return "CRANK THE KNOB 360° OR TAP BELOW TO DISPENSE ✦";
       case "turning":
-        return "Keep turning the knob! ↺";
+        return "MECHANICAL ROTATION ACTIVE... ↺";
       case "shaking":
-        return "✦ GASHAPON MECHANISM ACTIVE ✦";
+        return "✦ GASHAPON DISPENSER RUMBLING ✦";
       case "dispensing":
       case "dropping":
-        return "Capsule rolling down chute! 💊";
+        return "DISPENSING CAPSULE TO TRAY... 💊";
       case "landed":
-        return "Tap capsule in tray to open! ✨";
+        return "TAP CAPSULE IN TRAY TO UNBOX ✦";
       case "opening":
-        return "Unboxing your capsule... ✦";
+        return "UNBOXING CAPSULE... ✨";
       case "revealed":
       case "completed":
-        return "Capsule collected! 🎉";
+        return "CAPSULE SECURED IN BINDER ✦";
       default:
         return "";
     }
@@ -176,14 +187,17 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => {
+              haptics.selection();
               actions.reset();
               router.back();
             }}
           >
-            <Text style={styles.backBtnText}>← BACK</Text>
+            <Text style={styles.backBtnText}>← RETURN</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>SUPER GASHAPON</Text>
-          <View style={{ width: 60 }} />
+          <View style={styles.titleBadge}>
+            <Text style={styles.headerTitle}>GASHAPON UNIT 01</Text>
+          </View>
+          <View style={{ width: 70 }} />
         </View>
 
         {/* Machine Area */}
@@ -211,8 +225,11 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
           {(state.phase === "ready" || state.phase === "turning") && (
             <TouchableOpacity
               style={styles.crankBtn}
-              onPress={triggerFullTurn}
-              activeOpacity={0.8}
+              onPress={() => {
+                haptics.selection();
+                triggerFullTurn();
+              }}
+              activeOpacity={0.85}
             >
               <Text style={styles.crankBtnText}>↻ CRANK KNOB (360°)</Text>
             </TouchableOpacity>
@@ -221,10 +238,13 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
           {state.phase === "landed" && (
             <TouchableOpacity
               style={styles.openBtn}
-              onPress={handleOpen}
-              activeOpacity={0.8}
+              onPress={() => {
+                haptics.selection();
+                handleOpen();
+              }}
+              activeOpacity={0.85}
             >
-              <Text style={styles.openBtnText}>✨ UNBOX CAPSULE NOW</Text>
+              <Text style={styles.openBtnText}>✦ UNBOX CAPSULE NOW</Text>
             </TouchableOpacity>
           )}
 
@@ -232,19 +252,21 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={styles.actionBtnPrimary}
-                onPress={() =>
+                onPress={() => {
+                  haptics.selection();
                   router.push({
                     pathname: "/reveal",
                     params: { capsuleId: state.currentCapsule?.id },
-                  })
-                }
+                  });
+                }}
               >
-                <Text style={styles.actionBtnText}>🖼️ VIEW PHOTO CARD</Text>
+                <Text style={styles.actionBtnText}>◈ VIEW PHOTO CARD</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.actionBtnSecondary}
                 onPress={() => {
+                  haptics.selection();
                   actions.reset();
                   router.push("/capture");
                 }}
@@ -260,7 +282,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0F0D15" },
+  container: { flex: 1, backgroundColor: "#0D0E12" },
   content: { flex: 1, paddingHorizontal: 16, paddingBottom: 16 },
   header: {
     flexDirection: "row",
@@ -269,15 +291,23 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   backBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+  },
+  backBtnText: { fontSize: 11, fontWeight: "900", color: "#D4AF37", letterSpacing: 1.5 },
+  titleBadge: {
+    paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "#16161C",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
-  backBtnText: { fontSize: 12, fontWeight: "800", color: "#FFB703" },
-  headerTitle: { fontSize: 16, fontWeight: "900", color: "#FFF", letterSpacing: 2 },
+  headerTitle: { fontSize: 13, fontWeight: "900", color: "#E2DFD7", letterSpacing: 2 },
   machineArea: {
     flex: 1,
     justifyContent: "center",
@@ -290,60 +320,60 @@ const styles = StyleSheet.create({
   },
   promptBanner: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 16,
-    backgroundColor: "#1A1B28",
-    borderWidth: 2,
-    borderColor: "#FFB703",
+    backgroundColor: "#16161C",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
     width: "100%",
     alignItems: "center",
   },
   promptText: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#FFB703",
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#D4AF37",
     textAlign: "center",
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
   },
   crankBtn: {
     width: "100%",
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 18,
-    backgroundColor: "#FFB703",
+    backgroundColor: "#C8372D",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: "#FFF",
-    shadowColor: "#FFB703",
-    shadowOffset: { width: 0, height: 6 },
+    borderWidth: 2,
+    borderColor: "#D4AF37",
+    shadowColor: "#C8372D",
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
-    shadowRadius: 10,
+    shadowRadius: 12,
     elevation: 8,
   },
   crankBtnText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "900",
-    color: "#111",
-    letterSpacing: 1,
+    color: "#FFFFFF",
+    letterSpacing: 1.5,
   },
   openBtn: {
     width: "100%",
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 18,
-    backgroundColor: "#00E5FF",
+    backgroundColor: "#D4AF37",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: "#FFF",
-    shadowColor: "#00E5FF",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+    shadowColor: "#D4AF37",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
     elevation: 8,
   },
   openBtnText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "900",
-    color: "#000",
-    letterSpacing: 1,
+    color: "#0E0E12",
+    letterSpacing: 1.5,
   },
   actionRow: {
     flexDirection: "row",
@@ -352,26 +382,27 @@ const styles = StyleSheet.create({
   },
   actionBtnPrimary: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: "#E63946",
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: "#C8372D",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#FFB703",
+    borderWidth: 1.5,
+    borderColor: "#D4AF37",
   },
   actionBtnSecondary: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: "#2B2D42",
+    paddingVertical: 16,
+    borderRadius: 16,
+    backgroundColor: "#16161C",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.15)",
   },
   actionBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "900",
     color: "#FFF",
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
 });
+
