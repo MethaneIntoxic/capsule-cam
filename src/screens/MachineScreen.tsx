@@ -47,14 +47,14 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     actions.loadImage();
   }, []);
 
-  // Handle activation — instant transition + rumble + sound
+  // Handle activation — 100% guaranteed phase progression sequence
   const handleActivate = useCallback(() => {
     haptics.heavyLock();
     haptics.startRumble();
     sound.play("handleClick");
     sound.play("capsuleRattle");
 
-    // 1. Build immediate capsule object so state transitions instantly
+    // 1. Build immediate capsule object so state transitions instantly to shaking
     const { color, rarity } = randomCapsuleParams();
     const immediateCapsule = createCapsule({
       imageUri,
@@ -67,44 +67,44 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     actions.activate(immediateCapsule);
     addCapsule(immediateCapsule);
 
-    // Save capsule asynchronously in background
+    // Save in storage asynchronously in background
     creation.create(imageUri, caption).then((saved) => {
       if (saved) addCapsule(saved);
     });
 
-    // 2. Run intense machine shake animation
-    machineShakeX.value = withTiming(14, { duration: 70 }, () => {
-      machineShakeX.value = withTiming(-14, { duration: 70 }, () => {
-        machineShakeX.value = withTiming(10, { duration: 70 }, () => {
-          machineShakeX.value = withTiming(-10, { duration: 70 }, () => {
-            machineShakeX.value = withTiming(5, { duration: 70 }, () => {
-              machineShakeX.value = withTiming(0, { duration: 70 }, () => {
-                runOnJS(actions.shakeComplete)();
-              });
-            });
+    // 2. Machine shake visual animation
+    machineShakeX.value = withTiming(12, { duration: 60 }, () => {
+      machineShakeX.value = withTiming(-12, { duration: 60 }, () => {
+        machineShakeX.value = withTiming(8, { duration: 60 }, () => {
+          machineShakeX.value = withTiming(-8, { duration: 60 }, () => {
+            machineShakeX.value = withTiming(0, { duration: 60 });
           });
         });
       });
     });
 
-    // 3. After shake, dispense capsule into tray
+    // 3. Step 1: Complete shaking -> Dispensing phase (t = 450ms)
+    setTimeout(() => {
+      actions.shakeComplete();
+    }, 450);
+
+    // 4. Step 2: Complete dispensing -> Dropping phase & drop capsule (t = 700ms)
     setTimeout(() => {
       actions.dispenseComplete();
       sound.play("capsuleDrop");
       capsuleOpacity.value = 1;
-      capsuleDropY.value = withTiming(
-        150,
-        {
-          duration: DURATIONS.DROP,
-          easing: Easing.bounce,
-        },
-        () => {
-          runOnJS(haptics.impact)();
-          runOnJS(sound.play)("trayImpact");
-          runOnJS(actions.dropComplete)();
-        }
-      );
-    }, DURATIONS.SHAKE + 100);
+      capsuleDropY.value = withTiming(150, {
+        duration: DURATIONS.DROP,
+        easing: Easing.bounce,
+      });
+    }, 700);
+
+    // 5. Step 3: Complete drop -> Landed phase in tray (t = 1250ms)
+    setTimeout(() => {
+      haptics.impact();
+      sound.play("trayImpact");
+      actions.dropComplete();
+    }, 1250);
   }, [imageUri, caption, actions, haptics, sound, creation, addCapsule, machineShakeX, capsuleDropY, capsuleOpacity]);
 
   const handleRotationChange = useCallback(

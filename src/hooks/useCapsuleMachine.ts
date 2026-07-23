@@ -86,18 +86,18 @@ function machineReducer(state: MachineState, action: MachineAction): MachineStat
       return state;
 
     case "shaking":
-      if (action.type === "SHAKE_COMPLETE")
-        return { ...state, phase: "dispensing" };
+      if (action.type === "SHAKE_COMPLETE") return { ...state, phase: "dispensing" };
+      if (action.type === "DISPENSE_COMPLETE") return { ...state, phase: "dropping" };
+      if (action.type === "DROP_COMPLETE") return { ...state, phase: "landed" };
       return state;
 
     case "dispensing":
-      if (action.type === "DISPENSE_COMPLETE")
-        return { ...state, phase: "dropping" };
+      if (action.type === "DISPENSE_COMPLETE") return { ...state, phase: "dropping" };
+      if (action.type === "DROP_COMPLETE") return { ...state, phase: "landed" };
       return state;
 
     case "dropping":
-      if (action.type === "DROP_COMPLETE")
-        return { ...state, phase: "landed" };
+      if (action.type === "DROP_COMPLETE") return { ...state, phase: "landed" };
       return state;
 
     case "landed":

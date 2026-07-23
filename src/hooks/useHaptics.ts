@@ -20,69 +20,49 @@ function webVibrate(pattern: number | number[]) {
 
 export function useHaptics() {
   const selection = useCallback(() => {
+    webVibrate(20);
     try {
-      if (HapticsModule) {
-        HapticsModule.selectionAsync();
-      } else {
-        webVibrate(15);
-      }
+      HapticsModule?.selectionAsync();
     } catch {}
   }, []);
 
   const tick = useCallback(() => {
+    webVibrate(25);
     try {
-      if (HapticsModule) {
-        HapticsModule.impactAsync(HapticsModule.ImpactFeedbackStyle.Light);
-      } else {
-        webVibrate(20);
-      }
+      HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Light);
     } catch {}
   }, []);
 
   const activate = useCallback(() => {
+    webVibrate(45);
     try {
-      if (HapticsModule) {
-        HapticsModule.impactAsync(HapticsModule.ImpactFeedbackStyle.Medium);
-      } else {
-        webVibrate(40);
-      }
+      HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Medium);
     } catch {}
   }, []);
 
   const heavyLock = useCallback(() => {
+    webVibrate([40, 30, 60, 30, 80]);
     try {
-      if (HapticsModule) {
-        HapticsModule.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
-        setTimeout(() => {
-          HapticsModule?.notificationAsync(HapticsModule.NotificationFeedbackType.Success);
-        }, 120);
-      } else {
-        webVibrate([40, 30, 60]);
-      }
+      HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
     } catch {}
   }, []);
 
   const impact = useCallback(() => {
+    webVibrate(70);
     try {
-      if (HapticsModule) {
-        HapticsModule.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
-      } else {
-        webVibrate(60);
-      }
+      HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
     } catch {}
   }, []);
 
   const reveal = useCallback(() => {
+    webVibrate([60, 40, 80, 40, 120]);
     try {
-      if (HapticsModule) {
-        HapticsModule.notificationAsync(HapticsModule.NotificationFeedbackType.Success);
-      } else {
-        webVibrate([50, 40, 80, 40, 100]);
-      }
+      HapticsModule?.notificationAsync(HapticsModule.NotificationFeedbackType.Success);
     } catch {}
   }, []);
 
   const startRumble = useCallback(() => {
+    webVibrate([50, 30, 50, 30, 60, 40, 80, 40, 100]);
     try {
       if (HapticsModule) {
         let count = 0;
@@ -93,8 +73,6 @@ export function useHaptics() {
           } catch {}
           if (count >= 6) clearInterval(interval);
         }, 70);
-      } else {
-        webVibrate([50, 30, 50, 30, 50, 30, 70]);
       }
     } catch {}
   }, []);

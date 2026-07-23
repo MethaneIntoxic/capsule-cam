@@ -50,20 +50,20 @@ export function useHandleGesture(config: UseHandleGestureConfig): HandleGestureR
       if (currentTick >= 6) {
         clearInterval(interval);
       }
-    }, 100);
+    }, 90);
 
     rotation.value = withTiming(
       360,
-      { duration: 800, easing: Easing.bezier(0.25, 0.1, 0.25, 1) },
-      (finished) => {
-        if (finished) {
-          runOnJS(config.onActivate)();
-          rotation.value = 0;
-          lastHapticTick.value = 0;
-          isActivating.current = false;
-        }
-      }
+      { duration: 600, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }
     );
+
+    // Guaranteed execution timer
+    setTimeout(() => {
+      config.onActivate();
+      rotation.value = 0;
+      lastHapticTick.value = 0;
+      isActivating.current = false;
+    }, 620);
   };
 
   const tapGesture = Gesture.Tap()
@@ -100,21 +100,15 @@ export function useHandleGesture(config: UseHandleGestureConfig): HandleGestureR
 
       if (rotation.value >= ROTATION_THRESHOLD) {
         isActivating.current = true;
-        // Finish turning 360
-        rotation.value = withTiming(
-          360,
-          { duration: 300 },
-          (finished) => {
-            if (finished) {
-              runOnJS(config.onActivate)();
-              rotation.value = 0;
-              lastHapticTick.value = 0;
-              isActivating.current = false;
-            }
-          }
-        );
+        rotation.value = withTiming(360, { duration: 300 });
+
+        setTimeout(() => {
+          config.onActivate();
+          rotation.value = 0;
+          lastHapticTick.value = 0;
+          isActivating.current = false;
+        }, 320);
       } else {
-        // Snap back if didn't reach threshold
         rotation.value = withSpring(0, {
           stiffness: 200,
           damping: 20,
