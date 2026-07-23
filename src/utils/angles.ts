@@ -40,14 +40,31 @@ export function clampDegrees(value: number, max: number = 360): number {
 }
 
 /**
- * Convert pan gesture translation to approximate rotation degrees.
- * Uses a simple distance-to-angle mapping for the MVP.
+ * Compute continuous rotation degrees from pan translation.
+ * Maps drag movement to smooth 0-360 degree rotation based on touch movement.
  */
 export function panToDegrees(
   translationX: number,
   translationY: number,
-  scale: number = 2.5
+  scale: number = 2.2
 ): number {
-  const distance = Math.sqrt(translationX * translationX + translationY * translationY);
-  return distance * scale;
+  // Combine horizontal and vertical gesture delta for intuitive clockwise turn
+  const effectiveDistance = translationY * 1.5 + translationX * 1.0;
+  const dist = effectiveDistance > 0
+    ? effectiveDistance
+    : Math.sqrt(translationX * translationX + translationY * translationY);
+  return dist * scale;
 }
+
+/**
+ * Calculate angle in degrees (0-360) from center of element.
+ */
+export function calculatePolarAngle(x: number, y: number, centerX: number = 50, centerY: number = 50): number {
+  const dx = x - centerX;
+  const dy = y - centerY;
+  let rad = Math.atan2(dy, dx);
+  let deg = rad * (180 / Math.PI);
+  if (deg < 0) deg += 360;
+  return deg;
+}
+

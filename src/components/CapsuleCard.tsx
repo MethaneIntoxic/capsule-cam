@@ -1,15 +1,14 @@
 // src/components/CapsuleCard.tsx
-// Revealed photo card — shows the image, caption, date, and rarity.
+// Revealed photo card — Polaroid / instant film retro card with rarity foil sheen.
 
 import React from "react";
 import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
-import { Capsule } from "../models/Capsule";
-import { CAPSULE_COLOR_HEX } from "../models/Capsule";
+import { Capsule, CAPSULE_COLOR_HEX } from "../models/Capsule";
 import { RARITY_TABLE } from "../models/Rarity";
 import RarityBadge from "./RarityBadge";
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = Math.min(width - 60, 320);
+const CARD_WIDTH = Math.min(width - 48, 330);
 
 interface CapsuleCardProps {
   capsule: Capsule;
@@ -25,92 +24,208 @@ export default function CapsuleCard({ capsule }: CapsuleCardProps) {
         month: "short",
         day: "numeric",
       })
-    : "";
+    : "JUL 23 2026";
+
+  const isSpecial = capsule.rarity === "special";
+  const isRare = capsule.rarity === "rare";
 
   return (
     <View
       style={[
-        styles.card,
-        { borderColor: rarityConfig?.borderColor ?? "#C0C0C0" },
+        styles.cardFrame,
+        isSpecial && styles.cardSpecialFrame,
+        isRare && styles.cardRareFrame,
       ]}
     >
-      {/* Image */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: capsule.imageUri }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      </View>
+      {/* Decorative Washi Tape Accent */}
+      <View style={styles.washiTape} />
 
-      {/* Info */}
-      <View style={styles.info}>
-        <View style={styles.infoTop}>
-          <RarityBadge rarity={capsule.rarity} />
-          <View
-            style={[
-              styles.colorDot,
-              { backgroundColor: colorHex },
-            ]}
+      {/* Main Polaroid Body */}
+      <View style={styles.polaroidBody}>
+        {/* Photo Container */}
+        <View style={styles.imageBox}>
+          <Image
+            source={{ uri: capsule.imageUri }}
+            style={styles.image}
+            resizeMode="cover"
           />
+          {/* Film Grain & Gloss Sheen */}
+          <View style={styles.imageGlossOverlay} />
+
+          {/* Date Stamp */}
+          <View style={styles.dateBadge}>
+            <Text style={styles.dateText}>'98 07 23</Text>
+          </View>
         </View>
 
-        {capsule.caption && (
-          <Text style={styles.caption} numberOfLines={2}>
-            {capsule.caption}
-          </Text>
-        )}
+        {/* Info & Caption Area (Bottom of Polaroid) */}
+        <View style={styles.bottomSection}>
+          <View style={styles.metaRow}>
+            <RarityBadge rarity={capsule.rarity} />
+            <View style={styles.colorTag}>
+              <View style={[styles.colorDot, { backgroundColor: colorHex }]} />
+              <Text style={styles.colorName}>{capsule.capsuleColor.toUpperCase()}</Text>
+            </View>
+          </View>
 
-        <Text style={styles.date}>{formattedDate}</Text>
+          {capsule.caption ? (
+            <Text style={styles.captionText} numberOfLines={2}>
+              "{capsule.caption}"
+            </Text>
+          ) : (
+            <Text style={styles.defaultCaption}>✦ MEMORY CAPSULE ✦</Text>
+          )}
+
+          <View style={styles.footerRow}>
+            <Text style={styles.stampText}>CAPSULE CAM #098</Text>
+            <Text style={styles.dateSub}>{formattedDate}</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  cardFrame: {
     width: CARD_WIDTH,
-    borderRadius: 20,
-    overflow: "hidden",
-    borderWidth: 2,
-    backgroundColor: "#1E1E32",
+    borderRadius: 24,
+    backgroundColor: "#FDFBF7",
+    padding: 12,
+    borderWidth: 3,
+    borderColor: "#E2D9C8",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.6,
+    shadowRadius: 18,
     elevation: 16,
+    position: "relative",
   },
-  imageContainer: {
+  cardRareFrame: {
+    borderColor: "#00E5FF",
+    backgroundColor: "#F4FAFF",
+  },
+  cardSpecialFrame: {
+    borderColor: "#FFD700",
+    backgroundColor: "#FFFDF0",
+  },
+  washiTape: {
+    position: "absolute",
+    top: -12,
+    alignSelf: "center",
+    width: 90,
+    height: 22,
+    backgroundColor: "rgba(255, 183, 3, 0.75)",
+    borderRadius: 4,
+    transform: [{ rotate: "-2deg" }],
+    zIndex: 10,
+  },
+  polaroidBody: {
+    width: "100%",
+    alignItems: "center",
+  },
+  imageBox: {
     width: "100%",
     aspectRatio: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+    position: "relative",
+    backgroundColor: "#111",
+    borderWidth: 2,
+    borderColor: "rgba(0,0,0,0.1)",
   },
   image: {
     width: "100%",
     height: "100%",
   },
-  info: {
-    padding: 16,
+  imageGlossOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  dateBadge: {
+    position: "absolute",
+    bottom: 10,
+    right: 12,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  dateText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#FF5E36",
+    fontFamily: "monospace",
+  },
+  bottomSection: {
+    width: "100%",
+    paddingTop: 14,
+    paddingHorizontal: 4,
     gap: 8,
   },
-  infoTop: {
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  colorTag: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    gap: 6,
+    backgroundColor: "#EAE3D2",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
   colorDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(0,0,0,0.2)",
   },
-  caption: {
+  colorName: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#333",
+    letterSpacing: 0.5,
+  },
+  captionText: {
     fontSize: 15,
-    color: "#FFF",
+    fontWeight: "800",
+    color: "#1A1A2E",
+    fontStyle: "italic",
     lineHeight: 20,
+    marginTop: 2,
   },
-  date: {
+  defaultCaption: {
     fontSize: 12,
-    color: "#B0B0B0",
+    fontWeight: "800",
+    color: "#888",
+    letterSpacing: 1,
+  },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.08)",
+    paddingTop: 6,
+  },
+  stampText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#888",
+    letterSpacing: 1,
+  },
+  dateSub: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#666",
   },
 });

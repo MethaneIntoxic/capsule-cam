@@ -1,7 +1,5 @@
 // src/screens/MachineScreen.tsx
 // Gashapon machine main interaction screen.
-// Shows the machine, handle, glass dome, and tray.
-// Transitions through the animation state machine as user interacts.
 
 import React, { useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
@@ -13,7 +11,6 @@ import Animated, {
   runOnJS,
   Easing,
 } from "react-native-reanimated";
-import { GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMachineContext } from "../state/MachineContext";
 import { useHandleGesture } from "../hooks/useHandleGesture";
@@ -40,7 +37,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 
   // Animated values for machine visuals
   const machineShakeX = useSharedValue(0);
-  const capsuleDropY = useSharedValue(-200);
+  const capsuleDropY = useSharedValue(-180);
   const capsuleOpacity = useSharedValue(0);
 
   // Load image on mount
@@ -52,10 +49,9 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
   const handleActivate = useCallback(async () => {
     haptics.activate();
 
-    // Use the creation pipeline to resize, randomise, and persist
+    // Use creation pipeline
     const capsule = await creation.create(imageUri, caption);
     if (!capsule) {
-      // Creation failed — still use inline fallback
       const { color, rarity } = randomCapsuleParams();
       const fallbackCapsule = createCapsule({
         imageUri,
@@ -65,58 +61,65 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
         rarity,
       });
       actions.activate(fallbackCapsule);
-      return;
+    } else {
+      actions.activate(capsule);
+      await addCapsule(capsule);
     }
 
-    actions.activate(capsule);
-    await addCapsule(capsule);
-
-    // Run shake animation
-    machineShakeX.value = withTiming(6, { duration: 100 }, () => {
-      machineShakeX.value = withTiming(-6, { duration: 100 }, () => {
-        machineShakeX.value = withTiming(3, { duration: 100 }, () => {
-          machineShakeX.value = withTiming(-3, { duration: 100 }, () => {
-            machineShakeX.value = withTiming(0, { duration: 100 }, () => {
-              runOnJS(actions.shakeComplete)();
+    // Run intense machine shake animation
+    machineShakeX.value = withTiming(10, { duration: 80 }, () => {
+      machineShakeX.value = withTiming(-10, { duration: 80 }, () => {
+        machineShakeX.value = withTiming(8, { duration: 80 }, () => {
+          machineShakeX.value = withTiming(-8, { duration: 80 }, () => {
+            machineShakeX.value = withTiming(4, { duration: 80 }, () => {
+              machineShakeX.value = withTiming(0, { duration: 80 }, () => {
+                runOnJS(actions.shakeComplete)();
+              });
             });
           });
         });
       });
     });
 
-    // After shake, dispense
+    // After shake, dispense capsule into tray
     setTimeout(() => {
       actions.dispenseComplete();
       capsuleOpacity.value = 1;
-      capsuleDropY.value = withTiming(0, {
-        duration: DURATIONS.DROP,
-        easing: Easing.bezier(0.22, 0.61, 0.36, 1),
-      }, () => {
-        runOnJS(haptics.impact)();
-        runOnJS(actions.dropComplete)();
-      });
-    }, DURATIONS.SHAKE + 200);
+      capsuleDropY.value = withTiming(
+        150,
+        {
+          duration: DURATIONS.DROP,
+          easing: Easing.bounce,
+        },
+        () => {
+          runOnJS(haptics.impact)();
+          runOnJS(actions.dropComplete)();
+        }
+      );
+    }, DURATIONS.SHAKE + 100);
   }, [imageUri, caption, actions, haptics, creation, addCapsule, machineShakeX, capsuleDropY, capsuleOpacity]);
 
-  // Handle rotation updates
-  const handleRotationChange = useCallback((_degrees: number) => {
-    actions.setRotation(_degrees);
-  }, [actions]);
+  const handleRotationChange = useCallback(
+    (_degrees: number) => {
+      actions.setRotation(_degrees);
+    },
+    [actions]
+  );
 
-  // Handle haptic ticks during rotation
-  const handleHapticTick = useCallback((_tick: number) => {
-    haptics.tick();
-  }, [haptics]);
+  const handleHapticTick = useCallback(
+    (_tick: number) => {
+      haptics.tick();
+    },
+    [haptics]
+  );
 
-  // Handle gesture
-  const { gesture, handleStyle } = useHandleGesture({
+  const { gesture, handleStyle, triggerFullTurn } = useHandleGesture({
     onActivate: handleActivate,
     onRotationChange: handleRotationChange,
     onHapticTick: handleHapticTick,
     enabled: state.phase === "ready" || state.phase === "turning",
   });
 
-  // Handle opening
   const handleOpen = useCallback(() => {
     if (state.phase !== "landed") return;
     actions.startOpening();
@@ -126,7 +129,6 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
       actions.openComplete();
       haptics.reveal();
 
-      // Auto-save on reveal
       if (state.currentCapsule) {
         addCapsule(state.currentCapsule);
         actions.saveComplete();
@@ -134,37 +136,33 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     }, DURATIONS.OPEN);
   }, [state.phase, state.currentCapsule, actions, haptics, addCapsule]);
 
-  // Machine shake style
   const machineStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: machineShakeX.value }],
   }));
 
-  // Capsule drop style
   const dropStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: capsuleDropY.value }],
     opacity: capsuleOpacity.value,
   }));
 
-  // Prompt text based on phase
   const promptText = () => {
     switch (state.phase) {
       case "ready":
-        return "Turn the handle!";
+        return "Crank the knob or tap TURN to dispense! ↻";
       case "turning":
-        return "Keep turning...";
+        return "Keep turning the knob! ↺";
       case "shaking":
-        return "Shaking...";
+        return "✦ GASHAPON MECHANISM ACTIVE ✦";
       case "dispensing":
       case "dropping":
-        return "A capsule is coming!";
+        return "Capsule rolling down chute! 💊";
       case "landed":
-        return "Tap to open!";
+        return "Tap capsule in tray to open! ✨";
       case "opening":
-        return "Opening...";
+        return "Unboxing your capsule... ✦";
       case "revealed":
-        return "Your capsule is ready!";
       case "completed":
-        return "Saved to collection!";
+        return "Capsule collected! 🎉";
       default:
         return "";
     }
@@ -175,11 +173,17 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
       <View style={[styles.content, { paddingTop: insets.top + 8 }]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backBtn}>← Back</Text>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              actions.reset();
+              router.back();
+            }}
+          >
+            <Text style={styles.backBtnText}>← BACK</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Gashapon Machine</Text>
-          <View style={{ width: 50 }} />
+          <Text style={styles.headerTitle}>SUPER GASHAPON</Text>
+          <View style={{ width: 60 }} />
         </View>
 
         {/* Machine Area */}
@@ -190,58 +194,65 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
               capsuleColor={state.currentCapsule?.capsuleColor ?? null}
               previewImageUri={imageUri}
               capsuleDropStyle={dropStyle}
+              handleStyle={handleStyle}
+              gesture={gesture}
+              onTurnClick={triggerFullTurn}
+              onOpenClick={handleOpen}
             />
           </Animated.View>
+        </View>
 
-          {/* Handle */}
+        {/* Controls & Prompts */}
+        <View style={styles.controlArea}>
+          <View style={styles.promptBanner}>
+            <Text style={styles.promptText}>{promptText()}</Text>
+          </View>
+
           {(state.phase === "ready" || state.phase === "turning") && (
-            <GestureDetector gesture={gesture}>
-              <Animated.View style={[styles.handleContainer, handleStyle]}>
-                <View style={styles.handleKnob} />
-                <View style={styles.handleBar} />
-              </Animated.View>
-            </GestureDetector>
-          )}
-
-          {/* Tap to open area */}
-          {(state.phase === "landed") && (
             <TouchableOpacity
-              style={styles.openArea}
-              onPress={handleOpen}
-              activeOpacity={0.7}
+              style={styles.crankBtn}
+              onPress={triggerFullTurn}
+              activeOpacity={0.8}
             >
-              <Text style={styles.openText}>👆 Tap to Open</Text>
+              <Text style={styles.crankBtnText}>↻ CRANK KNOB (360°)</Text>
             </TouchableOpacity>
           )}
 
-          {/* Action buttons after reveal */}
+          {state.phase === "landed" && (
+            <TouchableOpacity
+              style={styles.openBtn}
+              onPress={handleOpen}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.openBtnText}>✨ UNBOX CAPSULE NOW</Text>
+            </TouchableOpacity>
+          )}
+
           {(state.phase === "revealed" || state.phase === "completed") && (
-            <View style={styles.postRevealActions}>
+            <View style={styles.actionRow}>
               <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => router.push({
-                  pathname: "/reveal",
-                  params: { capsuleId: state.currentCapsule?.id }
-                })}
+                style={styles.actionBtnPrimary}
+                onPress={() =>
+                  router.push({
+                    pathname: "/reveal",
+                    params: { capsuleId: state.currentCapsule?.id },
+                  })
+                }
               >
-                <Text style={styles.actionButtonText}>💾 View Capsule</Text>
+                <Text style={styles.actionBtnText}>🖼️ VIEW PHOTO CARD</Text>
               </TouchableOpacity>
+
               <TouchableOpacity
-                style={[styles.actionButton, styles.secondaryBtn]}
+                style={styles.actionBtnSecondary}
                 onPress={() => {
                   actions.reset();
                   router.push("/capture");
                 }}
               >
-                <Text style={styles.actionButtonText}>🔄 Create Another</Text>
+                <Text style={styles.actionBtnText}>📸 ANOTHER CAPSULE</Text>
               </TouchableOpacity>
             </View>
           )}
-        </View>
-
-        {/* Prompt */}
-        <View style={styles.promptContainer}>
-          <Text style={styles.promptText}>{promptText()}</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -249,86 +260,118 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#1A1A2E" },
-  content: { flex: 1, paddingHorizontal: 16 },
+  container: { flex: 1, backgroundColor: "#0F0D15" },
+  content: { flex: 1, paddingHorizontal: 16, paddingBottom: 16 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  backBtn: { fontSize: 16, color: "#FFD700" },
-  headerTitle: { fontSize: 16, fontWeight: "700", color: "#FFF" },
+  backBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  backBtnText: { fontSize: 12, fontWeight: "800", color: "#FFB703" },
+  headerTitle: { fontSize: 16, fontWeight: "900", color: "#FFF", letterSpacing: 2 },
   machineArea: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    position: "relative",
   },
-  handleContainer: {
-    position: "absolute",
-    bottom: 140,
-    right: 30,
-    width: 60,
-    height: 80,
+  controlArea: {
     alignItems: "center",
-    zIndex: 10,
-  },
-  handleKnob: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFD700",
-    borderWidth: 3,
-    borderColor: "#FFA000",
-    shadowColor: "#FFD700",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  handleBar: {
-    width: 8,
-    height: 40,
-    backgroundColor: "#B0B0B0",
-    borderRadius: 4,
-  },
-  openArea: {
-    position: "absolute",
-    bottom: 80,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    backgroundColor: "rgba(255,215,0,0.2)",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#FFD700",
-  },
-  openText: { fontSize: 18, fontWeight: "700", color: "#FFD700" },
-  postRevealActions: {
-    position: "absolute",
-    bottom: 60,
     gap: 12,
+    paddingBottom: 8,
+  },
+  promptBanner: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: "#1A1B28",
+    borderWidth: 2,
+    borderColor: "#FFB703",
     width: "100%",
-    paddingHorizontal: 40,
-  },
-  actionButton: {
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: "#D32F2F",
-    alignItems: "center",
-  },
-  secondaryBtn: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-  },
-  actionButtonText: { fontSize: 16, fontWeight: "700", color: "#FFF" },
-  promptContainer: {
-    padding: 20,
     alignItems: "center",
   },
   promptText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFD700",
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#FFB703",
     textAlign: "center",
+    letterSpacing: 0.5,
+  },
+  crankBtn: {
+    width: "100%",
+    paddingVertical: 16,
+    borderRadius: 18,
+    backgroundColor: "#FFB703",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#FFF",
+    shadowColor: "#FFB703",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  crankBtnText: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#111",
+    letterSpacing: 1,
+  },
+  openBtn: {
+    width: "100%",
+    paddingVertical: 16,
+    borderRadius: 18,
+    backgroundColor: "#00E5FF",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#FFF",
+    shadowColor: "#00E5FF",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  openBtnText: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#000",
+    letterSpacing: 1,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+  },
+  actionBtnPrimary: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: "#E63946",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFB703",
+  },
+  actionBtnSecondary: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: "#2B2D42",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  actionBtnText: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#FFF",
+    letterSpacing: 0.5,
   },
 });

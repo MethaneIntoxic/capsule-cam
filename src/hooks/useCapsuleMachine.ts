@@ -46,13 +46,30 @@ const initialState: MachineState = {
 };
 
 function machineReducer(state: MachineState, action: MachineAction): MachineState {
+  if (action.type === "RESET") {
+    return { ...initialState };
+  }
+
   switch (state.phase) {
     case "idle":
       if (action.type === "LOAD_IMAGE") return { ...state, phase: "ready" };
+      if (action.type === "ACTIVATE") {
+        return { ...state, phase: "shaking", currentCapsule: action.capsule };
+      }
       return state;
 
     case "ready":
       if (action.type === "START_TURNING") return { ...state, phase: "turning" };
+      if (action.type === "SET_ROTATION") {
+        return { ...state, phase: "turning", handleRotation: action.rotation };
+      }
+      if (action.type === "ACTIVATE") {
+        return {
+          ...state,
+          phase: "shaking",
+          currentCapsule: action.capsule,
+        };
+      }
       return state;
 
     case "turning":
@@ -99,7 +116,6 @@ function machineReducer(state: MachineState, action: MachineAction): MachineStat
       return state;
 
     case "completed":
-      if (action.type === "RESET") return { ...initialState };
       return state;
 
     default:
