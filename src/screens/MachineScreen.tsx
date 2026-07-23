@@ -2,13 +2,13 @@
 // High-end Industrial Gashapon Machine interaction screen.
 
 import React, { useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  runOnJS,
+  withSequence,
   Easing,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,7 +21,6 @@ import { useCollectionContext } from "../state/CollectionContext";
 import { randomCapsuleParams } from "../utils/randomiser";
 import { createCapsule } from "../models/Capsule";
 import GashaponMachine from "../components/GashaponMachine";
-import { DURATIONS } from "../animations/machineAnimations";
 
 interface MachineScreenProps {
   imageUri: string;
@@ -39,7 +38,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 
   // Animated values for machine visuals
   const machineShakeX = useSharedValue(0);
-  const capsuleDropY = useSharedValue(-180);
+  const capsuleDropY = useSharedValue(0);
   const capsuleOpacity = useSharedValue(0);
 
   // Load image on mount
@@ -72,30 +71,22 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
       if (saved) addCapsule(saved);
     });
 
-    // 2. Machine shake visual animation — exactly 1.5 seconds (1500ms)
-    machineShakeX.value = withTiming(16, { duration: 100 }, () => {
-      machineShakeX.value = withTiming(-16, { duration: 100 }, () => {
-        machineShakeX.value = withTiming(14, { duration: 100 }, () => {
-          machineShakeX.value = withTiming(-14, { duration: 100 }, () => {
-            machineShakeX.value = withTiming(12, { duration: 100 }, () => {
-              machineShakeX.value = withTiming(-12, { duration: 100 }, () => {
-                machineShakeX.value = withTiming(10, { duration: 100 }, () => {
-                  machineShakeX.value = withTiming(-10, { duration: 100 }, () => {
-                    machineShakeX.value = withTiming(6, { duration: 100 }, () => {
-                      machineShakeX.value = withTiming(-6, { duration: 100 }, () => {
-                        machineShakeX.value = withTiming(0, { duration: 100 });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
+    // 2. Machine shake visual animation using withSequence — 100% stack-safe & smooth
+    machineShakeX.value = withSequence(
+      withTiming(16, { duration: 100 }),
+      withTiming(-16, { duration: 100 }),
+      withTiming(14, { duration: 100 }),
+      withTiming(-14, { duration: 100 }),
+      withTiming(12, { duration: 100 }),
+      withTiming(-12, { duration: 100 }),
+      withTiming(10, { duration: 100 }),
+      withTiming(-10, { duration: 100 }),
+      withTiming(6, { duration: 100 }),
+      withTiming(-6, { duration: 100 }),
+      withTiming(0, { duration: 100 })
+    );
 
-    // 3. Step 1: Complete shaking after exactly 1.5s -> Dispensing phase (t = 1500ms)
+    // 3. Step 1: Complete shaking after 1.5s -> Dispensing phase (t = 1500ms)
     setTimeout(() => {
       actions.shakeComplete();
       sound.play("capsuleDrop");
@@ -105,16 +96,17 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     setTimeout(() => {
       actions.dispenseComplete();
       capsuleOpacity.value = 1;
-      capsuleDropY.value = withTiming(150, {
+      capsuleDropY.value = withTiming(140, {
         duration: 600,
         easing: Easing.bounce,
       });
     }, 1800);
 
-    // 5. Step 3: Complete drop -> Landed phase in tray (t = 2400ms)
+    // 5. Step 3: Complete drop -> Landed phase in tray (t = 2450ms)
     setTimeout(() => {
       haptics.impact();
       sound.play("trayImpact");
+      capsuleOpacity.value = 0;
       actions.dropComplete();
     }, 2450);
   }, [imageUri, caption, actions, haptics, sound, creation, addCapsule, machineShakeX, capsuleDropY, capsuleOpacity]);
@@ -166,7 +158,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
   const promptText = () => {
     switch (state.phase) {
       case "ready":
-        return "CRANK THE KNOB 360° OR TAP BELOW TO DISPENSE ✦";
+        return "CRANK THE KNOB 360° OR PRESS BELOW ✦";
       case "turning":
         return "MECHANICAL ROTATION ACTIVE... ↺";
       case "shaking":
@@ -188,7 +180,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={[styles.content, { paddingTop: insets.top + 8 }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 8 }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -217,7 +209,11 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
               capsuleDropStyle={dropStyle}
               handleStyle={handleStyle}
               gesture={gesture}
-              onTurnClick={triggerFullTurn}
+              onTurnClick={() => {
+                haptics.heavyLock();
+                haptics.startRumble();
+                triggerFullTurn();
+              }}
               onOpenClick={handleOpen}
             />
           </Animated.View>
@@ -232,8 +228,11 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
           {(state.phase === "ready" || state.phase === "turning") && (
             <TouchableOpacity
               style={styles.crankBtn}
+              onPressIn={() => {
+                haptics.heavyLock();
+                haptics.startRumble();
+              }}
               onPress={() => {
-                haptics.selection();
                 triggerFullTurn();
               }}
               activeOpacity={0.85}
@@ -245,8 +244,10 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
           {state.phase === "landed" && (
             <TouchableOpacity
               style={styles.openBtn}
-              onPress={() => {
+              onPressIn={() => {
                 haptics.selection();
+              }}
+              onPress={() => {
                 handleOpen();
               }}
               activeOpacity={0.85}
@@ -283,7 +284,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
             </View>
           )}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -51,9 +51,11 @@ export function useCollection() {
 
   const getCapsule = useCallback(
     async (id: string): Promise<Capsule | null> => {
+      const inMemory = capsules.find((c) => c.id === id);
+      if (inMemory) return inMemory;
       return capsuleRepository.getById(id);
     },
-    []
+    [capsules]
   );
 
   return {
