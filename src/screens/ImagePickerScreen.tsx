@@ -17,6 +17,7 @@ import {
 import { useRouter } from "expo-router";
 import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
+import BottomTabBar from "../components/BottomTabBar";
 
 let ImagePickerModule: typeof import("expo-image-picker") | null = null;
 try {
@@ -253,13 +254,16 @@ export default function ImagePickerScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Floating Bottom Tab Navigation */}
+      <BottomTabBar />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0D0E12" },
-  content: { padding: 18, gap: 14 },
+  content: { padding: 18, paddingBottom: 90, gap: 14 },
   header: {
     flexDirection: "row",
     alignItems: "center",

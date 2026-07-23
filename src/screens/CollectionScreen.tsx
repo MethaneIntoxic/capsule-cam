@@ -20,6 +20,7 @@ import { useSound } from "../hooks/useSound";
 import { Capsule, Rarity } from "../models/Capsule";
 import { RARITY_TABLE } from "../models/Rarity";
 import CapsuleThumbnail from "../components/CapsuleThumbnail";
+import BottomTabBar from "../components/BottomTabBar";
 
 const { width } = Dimensions.get("window");
 const COLUMNS = 3;
@@ -201,6 +202,9 @@ export default function CollectionScreen() {
           />
         )}
       </View>
+
+      {/* Floating Bottom Tab Navigation */}
+      <BottomTabBar />
     </SafeAreaView>
   );
 }
@@ -308,7 +312,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   grid: {
-    paddingBottom: 40,
+    paddingBottom: 90,
   },
   gridRow: {
     gap: ITEM_SPACING,

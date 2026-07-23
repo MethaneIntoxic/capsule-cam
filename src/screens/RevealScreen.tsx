@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, {
@@ -18,16 +19,17 @@ import Animated, {
   withSpring,
   runOnJS,
 } from "react-native-reanimated";
-import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Capsule, CAPSULE_COLOR_HEX } from "../models/Capsule";
 import { useCollectionContext } from "../state/CollectionContext";
+import { Capsule, CAPSULE_COLOR_HEX } from "../models/Capsule";
 import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
 import CapsuleCard from "../components/CapsuleCard";
 import RarityBadge from "../components/RarityBadge";
 import ParticleBurst from "../components/ParticleBurst";
 import ShareSheet from "../components/ShareSheet";
+import BottomTabBar from "../components/BottomTabBar";
 import { DURATIONS } from "../animations/machineAnimations";
 
 interface RevealScreenProps {
@@ -144,17 +146,17 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={[styles.content, { paddingTop: insets.top + 8 }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 8, paddingBottom: 90 }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtnContainer}
             onPress={() => {
               haptics.selection();
-              router.back();
+              router.replace("/collection");
             }}
           >
-            <Text style={styles.backBtn}>← RETURN</Text>
+            <Text style={styles.backBtn}>← BINDER</Text>
           </TouchableOpacity>
           <RarityBadge rarity={capsule.rarity} />
         </View>
@@ -192,13 +194,14 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
             </TouchableOpacity>
           </GestureDetector>
 
-          {/* Revealed Polaroid Card */}
+          {/* Polaroid photo card */}
           <Animated.View style={[styles.cardContainer, cardStyle]}>
             <CapsuleCard capsule={capsule} />
+            <ParticleBurst color={colorHex} isVisible={isOpened} />
           </Animated.View>
         </View>
 
-        {/* Bottom Actions */}
+        {/* Action Controls */}
         <View style={styles.bottomArea}>
           {!isOpened ? (
             <TouchableOpacity
@@ -238,14 +241,17 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
             </View>
           )}
         </View>
-      </View>
+      </ScrollView>
+
+      {/* Floating Bottom Tab Navigation */}
+      <BottomTabBar />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0D0E12" },
-  content: { flex: 1, paddingHorizontal: 18 },
+  content: { flexGrow: 1, paddingHorizontal: 18 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorText: { fontSize: 14, color: "#888890", marginBottom: 16 },
   backLink: { fontSize: 14, color: "#D4AF37", fontWeight: "900" },

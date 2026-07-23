@@ -21,6 +21,7 @@ import { useCollectionContext } from "../state/CollectionContext";
 import { randomCapsuleParams } from "../utils/randomiser";
 import { createCapsule } from "../models/Capsule";
 import GashaponMachine from "../components/GashaponMachine";
+import BottomTabBar from "../components/BottomTabBar";
 
 interface MachineScreenProps {
   imageUri: string;
@@ -285,13 +286,16 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
           )}
         </View>
       </ScrollView>
+
+      {/* Floating Bottom Tab Navigation */}
+      <BottomTabBar />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0D0E12" },
-  content: { flex: 1, paddingHorizontal: 16, paddingBottom: 16 },
+  content: { flex: 1, paddingHorizontal: 16, paddingBottom: 90 },
   header: {
     flexDirection: "row",
     alignItems: "center",

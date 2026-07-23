@@ -20,6 +20,7 @@ import CapsuleThumbnail from "../components/CapsuleThumbnail";
 import { Capsule } from "../models/Capsule";
 
 import SoundToggle from "../components/SoundToggle";
+import BottomTabBar from "../components/BottomTabBar";
 import { audioEngine } from "../utils/audioEngine";
 
 export default function HomeScreen() {
@@ -155,6 +156,9 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Floating Bottom Tab Navigation */}
+      <BottomTabBar />
     </SafeAreaView>
   );
 }
@@ -166,7 +170,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 18,
-    paddingBottom: 40,
+    paddingBottom: 90,
     gap: 16,
   },
   topBar: {
