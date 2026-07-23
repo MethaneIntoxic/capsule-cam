@@ -40,3 +40,10 @@ yarn-error.*
 /ios
 /android
 /dist
+
+# Agent / IDE internals
+AGENTS.md
+CLAUDE.md
+BUILD_BLUEPRINT.md
+.reasonix/
+.claude/
