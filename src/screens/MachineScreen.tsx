@@ -47,7 +47,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     actions.loadImage();
   }, []);
 
-  // Handle activation — 100% guaranteed phase progression sequence
+  // Handle activation — 1.5 seconds intense shake, then dispense into tray
   const handleActivate = useCallback(() => {
     haptics.heavyLock();
     haptics.startRumble();
@@ -72,39 +72,51 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
       if (saved) addCapsule(saved);
     });
 
-    // 2. Machine shake visual animation
-    machineShakeX.value = withTiming(12, { duration: 60 }, () => {
-      machineShakeX.value = withTiming(-12, { duration: 60 }, () => {
-        machineShakeX.value = withTiming(8, { duration: 60 }, () => {
-          machineShakeX.value = withTiming(-8, { duration: 60 }, () => {
-            machineShakeX.value = withTiming(0, { duration: 60 });
+    // 2. Machine shake visual animation — exactly 1.5 seconds (1500ms)
+    machineShakeX.value = withTiming(16, { duration: 100 }, () => {
+      machineShakeX.value = withTiming(-16, { duration: 100 }, () => {
+        machineShakeX.value = withTiming(14, { duration: 100 }, () => {
+          machineShakeX.value = withTiming(-14, { duration: 100 }, () => {
+            machineShakeX.value = withTiming(12, { duration: 100 }, () => {
+              machineShakeX.value = withTiming(-12, { duration: 100 }, () => {
+                machineShakeX.value = withTiming(10, { duration: 100 }, () => {
+                  machineShakeX.value = withTiming(-10, { duration: 100 }, () => {
+                    machineShakeX.value = withTiming(6, { duration: 100 }, () => {
+                      machineShakeX.value = withTiming(-6, { duration: 100 }, () => {
+                        machineShakeX.value = withTiming(0, { duration: 100 });
+                      });
+                    });
+                  });
+                });
+              });
+            });
           });
         });
       });
     });
 
-    // 3. Step 1: Complete shaking -> Dispensing phase (t = 450ms)
+    // 3. Step 1: Complete shaking after exactly 1.5s -> Dispensing phase (t = 1500ms)
     setTimeout(() => {
       actions.shakeComplete();
-    }, 450);
+      sound.play("capsuleDrop");
+    }, 1500);
 
-    // 4. Step 2: Complete dispensing -> Dropping phase & drop capsule (t = 700ms)
+    // 4. Step 2: Complete dispensing -> Dropping phase & drop capsule into tray (t = 1800ms)
     setTimeout(() => {
       actions.dispenseComplete();
-      sound.play("capsuleDrop");
       capsuleOpacity.value = 1;
       capsuleDropY.value = withTiming(150, {
-        duration: DURATIONS.DROP,
+        duration: 600,
         easing: Easing.bounce,
       });
-    }, 700);
+    }, 1800);
 
-    // 5. Step 3: Complete drop -> Landed phase in tray (t = 1250ms)
+    // 5. Step 3: Complete drop -> Landed phase in tray (t = 2400ms)
     setTimeout(() => {
       haptics.impact();
       sound.play("trayImpact");
       actions.dropComplete();
-    }, 1250);
+    }, 2450);
   }, [imageUri, caption, actions, haptics, sound, creation, addCapsule, machineShakeX, capsuleDropY, capsuleOpacity]);
 
   const handleRotationChange = useCallback(
@@ -131,21 +143,16 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 
   const handleOpen = useCallback(() => {
     if (state.phase !== "landed") return;
-    actions.startOpening();
     haptics.selection();
     sound.play("capsuleOpen");
-
-    setTimeout(() => {
-      actions.openComplete();
-      haptics.reveal();
-      sound.play("revealChime");
-
-      if (state.currentCapsule) {
-        addCapsule(state.currentCapsule);
-        actions.saveComplete();
-      }
-    }, DURATIONS.OPEN);
-  }, [state.phase, state.currentCapsule, actions, haptics, sound, addCapsule]);
+    if (state.currentCapsule) {
+      addCapsule(state.currentCapsule);
+      router.push({
+        pathname: "/reveal",
+        params: { capsuleId: state.currentCapsule.id },
+      });
+    }
+  }, [state.phase, state.currentCapsule, haptics, sound, addCapsule, router]);
 
   const machineStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: machineShakeX.value }],
