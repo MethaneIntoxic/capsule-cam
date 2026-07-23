@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "Capsule Cam",
+    "slug": "capsule-cam",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "capsule-cam",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.capsulecam.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Capsule Cam needs camera access to capture photos for your capsules.",
+        "NSPhotoLibraryUsageDescription": "Capsule Cam needs photo library access to select images for your capsules."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1A1A2E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.capsulecam.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sharing",
+      "expo-splash-screen",
+      "expo-status-bar",
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Capsule Cam needs camera access to capture photos for your capsules."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Capsule Cam needs photo library access to select images for your capsules."
+        }
+      ]
+    ]
+  }
+}
