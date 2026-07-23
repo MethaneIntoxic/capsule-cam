@@ -9,15 +9,41 @@ interface ParticleBurstProps {
   isVisible: boolean;
 }
 
+const PARTICLE_POSITIONS = [
+  { x: -60, y: -80, size: 8, color: "#D4AF37" },
+  { x: 60, y: -70, size: 10, color: "#FFF" },
+  { x: -90, y: 10, size: 6, color: "#00E5FF" },
+  { x: 90, y: 20, size: 9, color: "#E040FB" },
+  { x: -40, y: 90, size: 7, color: "#FFD700" },
+  { x: 40, y: 80, size: 8, color: "#FFF" },
+  { x: -110, y: -40, size: 11, color: "#D4AF37" },
+  { x: 110, y: -30, size: 6, color: "#00E5FF" },
+  { x: 0, y: -110, size: 10, color: "#FFF" },
+  { x: 0, y: 110, size: 8, color: "#FFB74D" },
+  { x: -70, y: -120, size: 7, color: "#E040FB" },
+  { x: 70, y: -110, size: 9, color: "#D4AF37" },
+];
+
 export default function ParticleBurst({ color, isVisible }: ParticleBurstProps) {
   if (!isVisible) return null;
 
-  // Phase 2: implement animated particles
   return (
-    <View style={styles.container}>
-      <View style={[styles.particle, { backgroundColor: color }]} />
-      <View style={[styles.particle, styles.particle2, { backgroundColor: color }]} />
-      <View style={[styles.particle, styles.particle3, { backgroundColor: color }]} />
+    <View style={styles.container} pointerEvents="none">
+      {PARTICLE_POSITIONS.map((p, idx) => (
+        <View
+          key={idx}
+          style={[
+            styles.particle,
+            {
+              width: p.size,
+              height: p.size,
+              borderRadius: p.size / 2,
+              backgroundColor: p.color,
+              transform: [{ translateX: p.x }, { translateY: p.y }],
+            },
+          ]}
+        />
+      ))}
     </View>
   );
 }
@@ -27,25 +53,13 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 100,
   },
   particle: {
     position: "absolute",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  particle2: {
-    marginLeft: -30,
-    marginTop: -20,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  particle3: {
-    marginLeft: 30,
-    marginTop: 20,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    shadowColor: "#FFF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
   },
 });

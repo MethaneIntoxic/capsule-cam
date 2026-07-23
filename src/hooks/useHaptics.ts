@@ -3,6 +3,8 @@
 
 import { useCallback } from "react";
 
+import { audioEngine } from "../utils/audioEngine";
+
 let HapticsModule: typeof import("expo-haptics") | null = null;
 try {
   HapticsModule = require("expo-haptics");
@@ -28,6 +30,7 @@ export function useHaptics() {
 
   const tick = useCallback(() => {
     webVibrate(25);
+    audioEngine.playCrankClick();
     try {
       HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Light);
     } catch {}
@@ -35,6 +38,7 @@ export function useHaptics() {
 
   const activate = useCallback(() => {
     webVibrate(45);
+    audioEngine.playCoinInsert();
     try {
       HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Medium);
     } catch {}
@@ -42,6 +46,7 @@ export function useHaptics() {
 
   const heavyLock = useCallback(() => {
     webVibrate([40, 30, 60, 30, 80]);
+    audioEngine.playCoinInsert();
     try {
       HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
     } catch {}
@@ -49,6 +54,7 @@ export function useHaptics() {
 
   const impact = useCallback(() => {
     webVibrate(70);
+    audioEngine.playTrayThud();
     try {
       HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
     } catch {}
@@ -56,6 +62,7 @@ export function useHaptics() {
 
   const reveal = useCallback(() => {
     webVibrate([60, 40, 80, 40, 120]);
+    audioEngine.playUnboxChime();
     try {
       HapticsModule?.notificationAsync(HapticsModule.NotificationFeedbackType.Success);
     } catch {}
@@ -63,6 +70,7 @@ export function useHaptics() {
 
   const startRumble = useCallback(() => {
     webVibrate([50, 30, 50, 30, 60, 40, 80, 40, 100]);
+    audioEngine.playShakingRumble();
     try {
       if (HapticsModule) {
         let count = 0;

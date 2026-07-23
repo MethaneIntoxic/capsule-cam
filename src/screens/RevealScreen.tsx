@@ -26,6 +26,8 @@ import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
 import CapsuleCard from "../components/CapsuleCard";
 import RarityBadge from "../components/RarityBadge";
+import ParticleBurst from "../components/ParticleBurst";
+import ShareSheet from "../components/ShareSheet";
 import { DURATIONS } from "../animations/machineAnimations";
 
 interface RevealScreenProps {
@@ -207,27 +209,32 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
               <Text style={styles.instructionText}>✦ TAP OR SWIPE UP TO UNBOX CAPSULE ✦</Text>
             </TouchableOpacity>
           ) : (
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => {
-                  haptics.selection();
-                  sound.play("handleClick");
-                  router.push({ pathname: "/collection" });
-                }}
-              >
-                <Text style={styles.actionBtnText}>📦 BINDER</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, styles.secondaryBtn]}
-                onPress={() => {
-                  haptics.selection();
-                  sound.play("handleClick");
-                  router.push("/capture");
-                }}
-              >
-                <Text style={styles.actionBtnText}>📸 NEW FRAME</Text>
-              </TouchableOpacity>
+            <View style={{ width: "100%", alignItems: "center" }}>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => {
+                    haptics.selection();
+                    sound.play("handleClick");
+                    router.push({ pathname: "/collection" });
+                  }}
+                >
+                  <Text style={styles.actionBtnText}>📦 BINDER</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.secondaryBtn]}
+                  onPress={() => {
+                    haptics.selection();
+                    sound.play("handleClick");
+                    router.push("/capture");
+                  }}
+                >
+                  <Text style={styles.actionBtnText}>📸 NEW FRAME</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Social Share Card Trigger */}
+              <ShareSheet capsule={capsule} />
             </View>
           )}
         </View>

@@ -16,7 +16,7 @@ export type CapsuleColor =
   | "white"
   | "black";
 
-export type Rarity = "common" | "rare" | "special";
+export type Rarity = "common" | "rare" | "ultra_rare" | "special" | "legendary";
 
 export type MachineTheme =
   | "classic_red"

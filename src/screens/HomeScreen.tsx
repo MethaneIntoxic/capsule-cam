@@ -19,15 +19,24 @@ import { useSound } from "../hooks/useSound";
 import CapsuleThumbnail from "../components/CapsuleThumbnail";
 import { Capsule } from "../models/Capsule";
 
+import SoundToggle from "../components/SoundToggle";
+import { audioEngine } from "../utils/audioEngine";
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { capsules } = useCollectionContext();
   const haptics = useHaptics();
   const sound = useSound();
+  const [isMuted, setIsMuted] = React.useState(audioEngine.getMuted());
+
+  const handleToggleSound = () => {
+    const nextState = audioEngine.toggleMute();
+    setIsMuted(nextState);
+  };
 
   const recentCapsules = capsules.slice(0, 8);
-  const rareCount = capsules.filter((c) => c.rarity === "rare" || c.rarity === "special").length;
+  const rareCount = capsules.filter((c) => c.rarity === "rare" || c.rarity === "special" || c.rarity === "ultra_rare" || c.rarity === "legendary").length;
 
   const navigateWithHaptics = (route: any, params?: any) => {
     haptics.selection();
@@ -48,14 +57,17 @@ export default function HomeScreen() {
             <Text style={styles.logoText}>✦ CAPSULE CAM</Text>
             <Text style={styles.subLogo}>ANALOG FILM & GASHAPON STUDIO</Text>
           </View>
-          <TouchableOpacity
-            style={styles.collectionBtn}
-            onPress={() => navigateWithHaptics("/collection")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.collectionBadgeText}>{capsules.length}</Text>
-            <Text style={styles.collectionLabel}>BINDER</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <SoundToggle isMuted={isMuted} onToggle={handleToggleSound} />
+            <TouchableOpacity
+              style={styles.collectionBtn}
+              onPress={() => navigateWithHaptics("/collection")}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.collectionBadgeText}>{capsules.length}</Text>
+              <Text style={styles.collectionLabel}>BINDER</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Industrial Ticker Banner */}

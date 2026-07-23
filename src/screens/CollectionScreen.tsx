@@ -120,6 +120,22 @@ export default function CollectionScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Binder Progress Card */}
+        <View style={styles.progressCard}>
+          <View style={styles.progressHeaderRow}>
+            <Text style={styles.progressTitle}>35MM FOIL BINDER PROGRESS</Text>
+            <Text style={styles.progressCount}>{capsules.length} / 24 UNLOCKED</Text>
+          </View>
+          <View style={styles.progressBarTrack}>
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${Math.min(100, (capsules.length / 24) * 100)}%` },
+              ]}
+            />
+          </View>
+        </View>
+
         {/* Filter Tabs */}
         <View style={styles.filterRow}>
           {filterTabs.map((tab) => (
@@ -227,6 +243,44 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.12)",
   },
   refreshIcon: { fontSize: 16, color: "#D4AF37", fontWeight: "900" },
+  progressCard: {
+    backgroundColor: "#13141A",
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(212, 175, 55, 0.3)",
+    marginBottom: 14,
+  },
+  progressHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  progressTitle: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: "#888890",
+    letterSpacing: 1.5,
+  },
+  progressCount: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#D4AF37",
+    letterSpacing: 1,
+  },
+  progressBarTrack: {
+    width: "100%",
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#0A0A0E",
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#D4AF37",
+    borderRadius: 3,
+  },
   filterRow: {
     flexDirection: "row",
     gap: 8,
