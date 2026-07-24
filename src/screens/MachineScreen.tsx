@@ -59,8 +59,9 @@ export default function MachineScreen({ imageUri, caption, filmFilter }: Machine
     sound.play("capsuleRattle");
 
     // 1. Build immediate capsule object so state transitions instantly to shaking
+    const filterParam = (filmFilter && filmFilter !== "random" ? filmFilter : undefined) as FilmFilterId | undefined;
     const { color, rarity, filmFilter: chosenFilter } = randomCapsuleParams({
-      filmFilter: filmFilter as FilmFilterId,
+      filmFilter: filterParam,
     });
     const immediateCapsule = createCapsule({
       imageUri,

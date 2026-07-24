@@ -239,9 +239,48 @@ export default function ImagePickerScreen() {
           />
         </View>
 
+        {/* Film Stock Filter Selector Bar */}
+        <View style={styles.presetsSection}>
+          <Text style={styles.presetsTitle}>ANALOG FILM STOCK EMULATION</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsList}>
+            {[
+              { id: "kodachrome", label: "KODACHROME '74", badge: "🎞️ KODA 74" },
+              { id: "superia", label: "FUJI SUPERIA 200", badge: "🟢 FUJI 200" },
+              { id: "cinestill", label: "CINESTILL 800T", badge: "🔵 CINE 800T" },
+              { id: "noir", label: "MONOCHROME NOIR", badge: "⚫ ILFORD HP5" },
+              { id: "portra", label: "KODAK PORTRA 400", badge: "🟡 PORTRA 400" },
+              { id: "expired", label: "EXPIRED 1998 FILM", badge: "⚠️ EXPIRED 98" },
+              { id: "prism", label: "HOLOGRAPHIC PRISM", badge: "✦ PRISM 1-OF-1" },
+              { id: "random", label: "RANDOM SURPRISE", badge: "🎲 SURPRISE" },
+            ].map((filterOption) => {
+              const isActive = selectedFilter === filterOption.id;
+              return (
+                <TouchableOpacity
+                  key={filterOption.id}
+                  style={[
+                    styles.presetChip,
+                    isActive && styles.presetChipActive,
+                  ]}
+                  onPress={() => {
+                    haptics.selection();
+                    sound.play("handleClick");
+                    setSelectedFilter(filterOption.id as any);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.presetText, isActive && styles.presetTextActive]}>
+                    {filterOption.badge}
+                  </Text>
+                  {isActive && <View style={styles.activeDot} />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* Preset Photos Selection Bar */}
         <View style={styles.presetsSection}>
-          <Text style={styles.presetsTitle}>FILM STOCK EMULATION & SAMPLE FRAMES</Text>
+          <Text style={styles.presetsTitle}>SAMPLE CAMERA FRAMES</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsList}>
             {SAMPLE_PRESET_IMAGES.map((preset, idx) => {
               const isActive = selectedImage === preset.uri;
