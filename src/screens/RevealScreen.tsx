@@ -48,6 +48,11 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isOpened, setIsOpened] = useState(false);
 
+  useAndroidBackHandler(() => {
+    router.replace("/collection");
+    return true;
+  }, "/collection");
+
   // Animation values
   const topHalfTranslate = useSharedValue(0);
   const bottomHalfTranslate = useSharedValue(0);
@@ -143,11 +148,6 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
       </SafeAreaView>
     );
   }
-
-  useAndroidBackHandler(() => {
-    router.replace("/collection");
-    return true;
-  }, "/collection");
 
   const colorHex = CAPSULE_COLOR_HEX[capsule.capsuleColor] ?? "#FAFAFA";
   const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
