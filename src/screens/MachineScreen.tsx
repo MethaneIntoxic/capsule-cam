@@ -180,15 +180,13 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     }
   };
 
-  useAndroidBackHandler(() => {
+  const handleAndroidBack = useCallback(() => {
     actions.reset();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/capture");
-    }
+    router.replace("/capture");
     return true;
-  }, "/capture");
+  }, [actions, router]);
+
+  useAndroidBackHandler(handleAndroidBack);
 
   const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
 

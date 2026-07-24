@@ -95,14 +95,12 @@ export default function CollectionScreen() {
     })),
   ];
 
-  useAndroidBackHandler(() => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/");
-    }
+  const handleAndroidBack = useCallback(() => {
+    router.replace("/");
     return true;
-  }, "/");
+  }, [router]);
+
+  useAndroidBackHandler(handleAndroidBack);
 
   const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
 

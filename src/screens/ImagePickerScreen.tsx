@@ -1,7 +1,7 @@
 // src/screens/ImagePickerScreen.tsx
 // High-End SLR Viewfinder — Photo capture & film stock selection.
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -121,14 +121,12 @@ export default function ImagePickerScreen() {
   const insets = useSafeAreaInsets();
   const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
 
-  useAndroidBackHandler(() => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/");
-    }
+  const handleAndroidBack = useCallback(() => {
+    router.replace("/");
     return true;
-  }, "/");
+  }, [router]);
+
+  useAndroidBackHandler(handleAndroidBack);
 
   return (
     <SafeAreaView style={styles.container}>

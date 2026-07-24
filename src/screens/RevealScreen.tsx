@@ -1,7 +1,7 @@
 // src/screens/RevealScreen.tsx
 // High-End Capsule Reveal — Spring-loaded unboxing and foil photo card presentation.
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -48,10 +48,12 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isOpened, setIsOpened] = useState(false);
 
-  useAndroidBackHandler(() => {
+  const handleAndroidBack = useCallback(() => {
     router.replace("/collection");
     return true;
-  }, "/collection");
+  }, [router]);
+
+  useAndroidBackHandler(handleAndroidBack);
 
   // Animation values
   const topHalfTranslate = useSharedValue(0);
