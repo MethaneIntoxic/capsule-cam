@@ -115,10 +115,10 @@ export default function CollectionScreen() {
             style={styles.backBtnContainer}
             onPress={() => {
               haptics.selection();
-              router.back();
+              router.replace("/");
             }}
           >
-            <Text style={styles.backBtn}>← RETURN</Text>
+            <Text style={styles.backBtn}>← STUDIO</Text>
           </TouchableOpacity>
           <View style={styles.titleBadge}>
             <Text style={styles.headerTitle}>COLLECTION BINDER</Text>
@@ -223,7 +223,7 @@ export default function CollectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0E12" },
+  container: { flex: 1, backgroundColor: "#0D0E12", overflow: "hidden" },
   content: { flex: 1, paddingHorizontal: 18 },
   header: {
     flexDirection: "row",
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   grid: {
-    paddingBottom: 90,
+    paddingBottom: 110,
   },
   gridRow: {
     gap: ITEM_SPACING,

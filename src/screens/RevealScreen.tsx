@@ -154,7 +154,10 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 90 }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 110 }]}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -258,8 +261,8 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0E12" },
-  content: { flexGrow: 1, paddingHorizontal: 18 },
+  container: { flex: 1, backgroundColor: "#0D0E12", overflow: "hidden" },
+  content: { flexGrow: 1, paddingHorizontal: 18, paddingBottom: 110 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorText: { fontSize: 14, color: "#888890", marginBottom: 16 },
   backLink: { fontSize: 14, color: "#D4AF37", fontWeight: "900" },

@@ -194,7 +194,10 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 90 }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 110 }]}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -202,10 +205,10 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
             onPress={() => {
               haptics.selection();
               actions.reset();
-              router.back();
+              router.replace("/capture");
             }}
           >
-            <Text style={styles.backBtnText}>← RETURN</Text>
+            <Text style={styles.backBtnText}>← VIEWFINDER</Text>
           </TouchableOpacity>
           <View style={styles.titleBadge}>
             <Text style={styles.headerTitle}>GASHAPON UNIT 01</Text>
@@ -307,8 +310,8 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0E12" },
-  content: { flex: 1, paddingHorizontal: 16, paddingBottom: 90 },
+  container: { flex: 1, backgroundColor: "#0D0E12", overflow: "hidden" },
+  content: { flexGrow: 1, paddingHorizontal: 16, paddingBottom: 110 },
   header: {
     flexDirection: "row",
     alignItems: "center",

@@ -54,14 +54,17 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 12, paddingBottom: 90 }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingTop: topInset + 12, paddingBottom: 110 }]}
+      >
         {/* Top Header */}
         <View style={styles.topBar}>
           <View style={styles.brandBadge}>
             <Text style={styles.logoText}>✦ CAPSULE CAM</Text>
             <Text style={styles.subLogo}>ANALOG FILM & GASHAPON STUDIO</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={styles.headerRightGroup}>
             <SoundToggle isMuted={isMuted} onToggle={handleToggleSound} />
             <TouchableOpacity
               style={styles.collectionBtn}
@@ -170,11 +173,15 @@ export default function HomeScreen() {
             </View>
           </View>
         ) : (
-          <View style={styles.emptyShelfBox}>
-            <Text style={styles.emptyShelfIcon}>✦</Text>
+          <TouchableOpacity
+            style={styles.emptyShelfBox}
+            onPress={() => navigateWithHaptics("/capture")}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.emptyShelfIcon}>📸</Text>
             <Text style={styles.emptyShelfText}>No Capsules in Dispenser</Text>
-            <Text style={styles.emptyShelfSub}>Tap CREATE NEW CAPSULE to start your collection.</Text>
-          </View>
+            <Text style={styles.emptyShelfSub}>Tap here to open SLR Viewfinder & create your first capsule →</Text>
+          </TouchableOpacity>
         )}
       </ScrollView>
 
@@ -188,16 +195,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0D0E12",
+    overflow: "hidden",
   },
   content: {
     paddingHorizontal: 18,
-    paddingBottom: 90,
+    paddingBottom: 110,
     gap: 16,
   },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  headerRightGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   brandBadge: {
     backgroundColor: "#16161C",

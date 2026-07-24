@@ -132,17 +132,20 @@ export default function ImagePickerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 90 }]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 110 }]}
+      >
         {/* Top Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => {
               haptics.selection();
-              router.back();
+              router.replace("/");
             }}
           >
-            <Text style={styles.backBtnText}>← RETURN</Text>
+            <Text style={styles.backBtnText}>← STUDIO</Text>
           </TouchableOpacity>
           <View style={styles.titleBadge}>
             <Text style={styles.headerTitle}>SLR VIEWFINDER</Text>
@@ -281,8 +284,8 @@ export default function ImagePickerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0D0E12" },
-  content: { padding: 18, paddingBottom: 90, gap: 14 },
+  container: { flex: 1, backgroundColor: "#0D0E12", overflow: "hidden" },
+  content: { padding: 18, paddingBottom: 110, gap: 14 },
   header: {
     flexDirection: "row",
     alignItems: "center",
