@@ -12,7 +12,12 @@ try {
   // Web fallback
 }
 
+let lastVibrateTime = 0;
+
 function webVibrate(pattern: number | number[]) {
+  const now = Date.now();
+  if (now - lastVibrateTime < 60 && typeof pattern === "number") return;
+  lastVibrateTime = now;
   try {
     if (typeof window !== "undefined" && "navigator" in window && navigator.vibrate) {
       navigator.vibrate(pattern);

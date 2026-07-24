@@ -11,12 +11,14 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCollectionContext } from "../state/CollectionContext";
 import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
+import { useAndroidBackHandler } from "../hooks/useAndroidBackHandler";
 import { Capsule, Rarity } from "../models/Capsule";
 import { RARITY_TABLE } from "../models/Rarity";
 import CapsuleThumbnail from "../components/CapsuleThumbnail";
@@ -93,9 +95,20 @@ export default function CollectionScreen() {
     })),
   ];
 
+  useAndroidBackHandler(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+    return true;
+  }, "/");
+
+  const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={[styles.content, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.content, { paddingTop: topInset + 8 }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity

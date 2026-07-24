@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, {
@@ -25,6 +26,7 @@ import { useCollectionContext } from "../state/CollectionContext";
 import { Capsule, CAPSULE_COLOR_HEX } from "../models/Capsule";
 import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
+import { useAndroidBackHandler } from "../hooks/useAndroidBackHandler";
 import CapsuleCard from "../components/CapsuleCard";
 import RarityBadge from "../components/RarityBadge";
 import ParticleBurst from "../components/ParticleBurst";
@@ -142,11 +144,17 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
     );
   }
 
+  useAndroidBackHandler(() => {
+    router.replace("/collection");
+    return true;
+  }, "/collection");
+
   const colorHex = CAPSULE_COLOR_HEX[capsule.capsuleColor] ?? "#FAFAFA";
+  const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 8, paddingBottom: 90 }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 90 }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity

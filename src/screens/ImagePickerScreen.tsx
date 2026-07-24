@@ -13,10 +13,13 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
+import { useAndroidBackHandler } from "../hooks/useAndroidBackHandler";
 import BottomTabBar from "../components/BottomTabBar";
 
 let ImagePickerModule: typeof import("expo-image-picker") | null = null;
@@ -115,9 +118,21 @@ export default function ImagePickerScreen() {
     });
   };
 
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
+
+  useAndroidBackHandler(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+    return true;
+  }, "/");
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 90 }]}>
         {/* Top Header */}
         <View style={styles.header}>
           <TouchableOpacity

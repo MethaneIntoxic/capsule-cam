@@ -51,6 +51,11 @@ export default function ShareSheet({ capsule }: ShareSheetProps) {
           <Text style={styles.secondaryText}>{copied ? "✓ LINK COPIED!" : "🔗 COPY LINK"}</Text>
         </TouchableOpacity>
       </View>
+      {copied && (
+        <View style={styles.toastBanner}>
+          <Text style={styles.toastText}>✓ Link copied to clipboard! Share on Instagram & TikTok.</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -107,5 +112,20 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#D4AF37",
     letterSpacing: 1,
+  },
+  toastBanner: {
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#D4AF37",
+    marginTop: 4,
+  },
+  toastText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#D4AF37",
+    textAlign: "center",
   },
 });

@@ -2,7 +2,7 @@
 // High-end Industrial Gashapon Machine interaction screen.
 
 import React, { useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, {
   useSharedValue,
@@ -16,6 +16,7 @@ import { useMachineContext } from "../state/MachineContext";
 import { useHandleGesture } from "../hooks/useHandleGesture";
 import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
+import { useAndroidBackHandler } from "../hooks/useAndroidBackHandler";
 import { useCapsuleCreation } from "../hooks/useCapsuleCreation";
 import { useCollectionContext } from "../state/CollectionContext";
 import { randomCapsuleParams } from "../utils/randomiser";
@@ -179,9 +180,21 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     }
   };
 
+  useAndroidBackHandler(() => {
+    actions.reset();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/capture");
+    }
+    return true;
+  }, "/capture");
+
+  const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 8 }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 8, paddingBottom: 90 }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity

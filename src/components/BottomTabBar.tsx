@@ -2,7 +2,7 @@
 // High-End Floating Industrial Bottom Navigation Bar.
 
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHaptics } from "../hooks/useHaptics";
@@ -14,6 +14,8 @@ export default function BottomTabBar() {
   const insets = useSafeAreaInsets();
   const haptics = useHaptics();
   const sound = useSound();
+
+  const bottomInset = Math.max(insets.bottom, Platform.OS === "android" ? 16 : 10);
 
   const tabs = [
     { id: "studio", path: "/", label: "STUDIO", icon: "🏠" },
@@ -29,7 +31,7 @@ export default function BottomTabBar() {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View style={[styles.container, { paddingBottom: bottomInset }]}>
       <View style={styles.bar}>
         {tabs.map((tab) => {
           const isActive = pathname === tab.path || (tab.path !== "/" && pathname.startsWith(tab.path));

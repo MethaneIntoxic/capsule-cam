@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -49,9 +50,11 @@ export default function HomeScreen() {
     }
   };
 
+  const topInset = Math.max(insets.top, Platform.OS === "ios" ? 44 : 24);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: topInset + 12, paddingBottom: 90 }]}>
         {/* Top Header */}
         <View style={styles.topBar}>
           <View style={styles.brandBadge}>
