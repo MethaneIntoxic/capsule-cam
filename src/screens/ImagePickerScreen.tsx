@@ -167,7 +167,7 @@ export default function ImagePickerScreen() {
           {/* Viewfinder Target */}
           <View style={styles.previewBox}>
             {selectedImage ? (
-              <View style={{ flex: 1, width: "100%", height: "100%", position: "relative" }}>
+              <View style={{ flex: 1, width: "100%", height: "100%", justifyContent: "center", alignItems: "center", position: "relative" }}>
                 <Image
                   source={{ uri: selectedImage }}
                   style={[
