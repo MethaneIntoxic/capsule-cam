@@ -98,12 +98,14 @@ export default function MachineScreen({ imageUri, caption, filmFilter }: Machine
     // 3. Step 1: Complete shaking after 1.5s -> Dispensing phase (t = 1500ms)
     setTimeout(() => {
       actions.shakeComplete();
+      haptics.crankRumble();
       sound.play("capsuleDrop");
     }, 1500);
 
     // 4. Step 2: Complete dispensing -> Dropping phase & drop capsule into tray (t = 1800ms)
     setTimeout(() => {
       actions.dispenseComplete();
+      haptics.tick();
       capsuleOpacity.value = 1;
       capsuleDropY.value = withTiming(140, {
         duration: 600,

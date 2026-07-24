@@ -1,5 +1,5 @@
 // src/components/ShareSheet.tsx
-// Placeholder for Phase 4 — export format picker + share trigger.
+// Compact horizontal share actions pair for social media export.
 
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
@@ -42,90 +42,47 @@ export default function ShareSheet({ capsule }: ShareSheetProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>✦ SHARE PHOTO CAPSULE ✦</Text>
-      <View style={styles.row}>
-        <TouchableOpacity style={styles.button} onPress={handleShare} activeOpacity={0.8}>
-          <Text style={styles.buttonText}>📲 IG / TIKTOK STORY</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={handleCopyLink} activeOpacity={0.8}>
-          <Text style={styles.secondaryText}>{copied ? "✓ LINK COPIED!" : "🔗 COPY LINK"}</Text>
-        </TouchableOpacity>
-      </View>
-      {copied && (
-        <View style={styles.toastBanner}>
-          <Text style={styles.toastText}>✓ Link copied to clipboard! Share on Instagram & TikTok.</Text>
-        </View>
-      )}
+      <TouchableOpacity style={styles.button} onPress={handleShare} activeOpacity={0.8}>
+        <Text style={styles.buttonText}>📲 SHARE STORY</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.button, styles.secondaryButton]} onPress={handleCopyLink} activeOpacity={0.8}>
+        <Text style={styles.secondaryText}>{copied ? "✓ COPIED!" : "🔗 COPY LINK"}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
-    padding: 16,
-    backgroundColor: "#13141A",
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: "rgba(212, 175, 55, 0.4)",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 16,
-  },
-  title: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#D4AF37",
-    letterSpacing: 2,
-  },
-  row: {
     flexDirection: "row",
     gap: 10,
     width: "100%",
+    marginTop: 8,
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 14,
     backgroundColor: "#C8372D",
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: "#D4AF37",
     alignItems: "center",
-    shadowColor: "#C8372D",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    justifyContent: "center",
   },
   secondaryButton: {
-    backgroundColor: "#1E1F28",
-    borderColor: "rgba(255,255,255,0.2)",
-    shadowColor: "#000",
+    backgroundColor: "#16161C",
+    borderColor: "rgba(255,255,255,0.15)",
   },
   buttonText: {
     fontSize: 11,
     fontWeight: "900",
     color: "#FFF",
-    letterSpacing: 1.5,
+    letterSpacing: 1,
   },
   secondaryText: {
     fontSize: 11,
     fontWeight: "900",
     color: "#D4AF37",
     letterSpacing: 1,
-  },
-  toastBanner: {
-    backgroundColor: "rgba(212, 175, 55, 0.15)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#D4AF37",
-    marginTop: 4,
-  },
-  toastText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#D4AF37",
-    textAlign: "center",
   },
 });

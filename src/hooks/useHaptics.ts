@@ -16,7 +16,7 @@ let lastVibrateTime = 0;
 
 function webVibrate(pattern: number | number[]) {
   const now = Date.now();
-  if (now - lastVibrateTime < 60 && typeof pattern === "number") return;
+  if (now - lastVibrateTime < 15 && typeof pattern === "number") return;
   lastVibrateTime = now;
   try {
     if (typeof window !== "undefined" && "navigator" in window && navigator.vibrate) {
@@ -34,15 +34,23 @@ export function useHaptics() {
   }, []);
 
   const tick = useCallback(() => {
-    webVibrate(25);
+    webVibrate([25, 15, 25]);
     audioEngine.playCrankClick();
     try {
-      HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Light);
+      HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Medium);
+    } catch {}
+  }, []);
+
+  const crankRumble = useCallback(() => {
+    webVibrate([30, 20, 40, 20, 50, 30, 60, 30, 80, 40, 100]);
+    audioEngine.playCrankClick();
+    try {
+      HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
     } catch {}
   }, []);
 
   const activate = useCallback(() => {
-    webVibrate(45);
+    webVibrate([45, 20, 60]);
     audioEngine.playCoinInsert();
     try {
       HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Medium);
@@ -58,7 +66,7 @@ export function useHaptics() {
   }, []);
 
   const impact = useCallback(() => {
-    webVibrate(70);
+    webVibrate([70, 30, 90]);
     audioEngine.playTrayThud();
     try {
       HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
@@ -74,7 +82,7 @@ export function useHaptics() {
   }, []);
 
   const startRumble = useCallback(() => {
-    webVibrate([50, 30, 50, 30, 60, 40, 80, 40, 100]);
+    webVibrate([50, 30, 50, 30, 60, 40, 80, 40, 100, 50, 120, 50, 150]);
     audioEngine.playShakingRumble();
     try {
       if (HapticsModule) {
@@ -82,14 +90,14 @@ export function useHaptics() {
         const interval = setInterval(() => {
           count++;
           try {
-            HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Medium);
+            HapticsModule?.impactAsync(HapticsModule.ImpactFeedbackStyle.Heavy);
           } catch {}
-          if (count >= 6) clearInterval(interval);
-        }, 70);
+          if (count >= 8) clearInterval(interval);
+        }, 60);
       }
     } catch {}
   }, []);
 
-  return { selection, tick, activate, heavyLock, impact, reveal, startRumble };
+  return { selection, tick, crankRumble, activate, heavyLock, impact, reveal, startRumble };
 }
 

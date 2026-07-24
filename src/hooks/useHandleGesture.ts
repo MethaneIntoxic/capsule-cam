@@ -76,6 +76,10 @@ export function useHandleGesture(config: UseHandleGestureConfig): HandleGestureR
   const panGesture = Gesture.Pan()
     .enabled(config.enabled)
     .minDistance(2)
+    .onBegin(() => {
+      if (isActivating.current) return;
+      runOnJS(config.onHapticTick)(0);
+    })
     .onUpdate((event) => {
       if (isActivating.current) return;
 

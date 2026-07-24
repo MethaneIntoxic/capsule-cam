@@ -284,9 +284,10 @@ const styles = StyleSheet.create({
   },
   backBtn: { fontSize: 11, fontWeight: "900", color: "#D4AF37", letterSpacing: 1.5 },
   capsuleArea: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 380,
+    marginVertical: 10,
   },
   capsuleWrapper: {
     alignItems: "center",
@@ -331,13 +332,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.25)",
   },
   cardContainer: {
-    position: "absolute",
     alignItems: "center",
     zIndex: 10,
+    marginTop: -160,
   },
   bottomArea: {
-    paddingVertical: 20,
+    paddingVertical: 12,
     alignItems: "center",
+    width: "100%",
   },
   instructionRow: {
     paddingHorizontal: 24,
