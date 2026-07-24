@@ -21,6 +21,8 @@ import { useHaptics } from "../hooks/useHaptics";
 import { useSound } from "../hooks/useSound";
 import { useAndroidBackHandler } from "../hooks/useAndroidBackHandler";
 import BottomTabBar from "../components/BottomTabBar";
+import FilmFilterOverlay from "../components/FilmFilterOverlay";
+import { FilmFilterId, FILM_FILTERS } from "../models/FilmFilter";
 
 let ImagePickerModule: typeof import("expo-image-picker") | null = null;
 try {
@@ -104,6 +106,8 @@ export default function ImagePickerScreen() {
     }
   };
 
+  const [selectedFilter, setSelectedFilter] = useState<FilmFilterId>("kodachrome");
+
   const handleInsert = () => {
     if (!selectedImage) return;
     haptics.heavyLock();
@@ -114,6 +118,7 @@ export default function ImagePickerScreen() {
       params: {
         imageUri: selectedImage,
         caption: caption.trim() || undefined,
+        filmFilter: selectedFilter,
       },
     });
   };
@@ -140,7 +145,7 @@ export default function ImagePickerScreen() {
             style={styles.backBtn}
             onPress={() => {
               haptics.selection();
-              router.replace("/");
+              router.replace("/studio");
             }}
           >
             <Text style={styles.backBtnText}>← STUDIO</Text>
@@ -162,14 +167,17 @@ export default function ImagePickerScreen() {
           {/* Viewfinder Target */}
           <View style={styles.previewBox}>
             {selectedImage ? (
-              <Image
-                source={{ uri: selectedImage }}
-                style={[
-                  styles.previewImage,
-                  cropMode === "square" ? styles.previewSquare : styles.previewPortrait,
-                ]}
-                resizeMode="cover"
-              />
+              <View style={{ flex: 1, width: "100%", height: "100%", position: "relative" }}>
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={[
+                    styles.previewImage,
+                    cropMode === "square" ? styles.previewSquare : styles.previewPortrait,
+                  ]}
+                  resizeMode="cover"
+                />
+                <FilmFilterOverlay filterId={selectedFilter} showBadge={true} />
+              </View>
             ) : (
               <View style={styles.placeholderBox}>
                 <Text style={styles.placeholderIcon}>◈</Text>

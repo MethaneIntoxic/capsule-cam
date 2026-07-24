@@ -24,12 +24,15 @@ import { createCapsule } from "../models/Capsule";
 import GashaponMachine from "../components/GashaponMachine";
 import BottomTabBar from "../components/BottomTabBar";
 
+import { FilmFilterId } from "../models/FilmFilter";
+
 interface MachineScreenProps {
   imageUri: string;
   caption?: string;
+  filmFilter?: string;
 }
 
-export default function MachineScreen({ imageUri, caption }: MachineScreenProps) {
+export default function MachineScreen({ imageUri, caption, filmFilter }: MachineScreenProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { state, actions } = useMachineContext();
@@ -56,13 +59,16 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
     sound.play("capsuleRattle");
 
     // 1. Build immediate capsule object so state transitions instantly to shaking
-    const { color, rarity } = randomCapsuleParams();
+    const { color, rarity, filmFilter: chosenFilter } = randomCapsuleParams({
+      filmFilter: filmFilter as FilmFilterId,
+    });
     const immediateCapsule = createCapsule({
       imageUri,
       thumbnailUri: imageUri,
       caption: caption ?? null,
       capsuleColor: color,
       rarity,
+      filmFilter: chosenFilter,
     });
 
     actions.activate(immediateCapsule);
@@ -182,7 +188,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
 
   const handleAndroidBack = useCallback(() => {
     actions.reset();
-    router.replace("/capture");
+    router.replace("/");
     return true;
   }, [actions, router]);
 
@@ -203,7 +209,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
             onPress={() => {
               haptics.selection();
               actions.reset();
-              router.replace("/capture");
+              router.replace("/");
             }}
           >
             <Text style={styles.backBtnText}>← VIEWFINDER</Text>
@@ -291,7 +297,7 @@ export default function MachineScreen({ imageUri, caption }: MachineScreenProps)
                 onPress={() => {
                   haptics.selection();
                   actions.reset();
-                  router.push("/capture");
+                  router.push("/");
                 }}
               >
                 <Text style={styles.actionBtnText}>📸 ANOTHER CAPSULE</Text>

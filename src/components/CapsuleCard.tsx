@@ -6,6 +6,7 @@ import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
 import { Capsule, CAPSULE_COLOR_HEX } from "../models/Capsule";
 import { RARITY_TABLE } from "../models/Rarity";
 import RarityBadge from "./RarityBadge";
+import FilmFilterOverlay from "./FilmFilterOverlay";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = Math.min(width - 48, 330);
@@ -53,8 +54,8 @@ export default function CapsuleCard({ capsule }: CapsuleCardProps) {
             style={styles.image}
             resizeMode="cover"
           />
-          {/* Film Grain & Gloss Sheen */}
-          <View style={styles.imageGlossOverlay} />
+          {/* Film Grain & Analog Filter Overlay */}
+          <FilmFilterOverlay filterId={capsule.filmFilter} showBadge={true} />
 
           {/* Date Stamp */}
           <View style={styles.dateBadge}>

@@ -242,7 +242,7 @@ export default function RevealScreen({ capsuleId }: RevealScreenProps) {
                   onPress={() => {
                     haptics.selection();
                     sound.play("handleClick");
-                    router.push("/capture");
+                    router.push("/");
                   }}
                 >
                   <Text style={styles.actionBtnText}>📸 NEW FRAME</Text>

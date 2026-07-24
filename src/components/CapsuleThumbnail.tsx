@@ -5,6 +5,7 @@ import React from "react";
 import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Capsule, CAPSULE_COLOR_HEX } from "../models/Capsule";
 import { RARITY_TABLE } from "../models/Rarity";
+import FilmFilterOverlay from "./FilmFilterOverlay";
 
 interface CapsuleThumbnailProps {
   capsule: Capsule;
@@ -31,18 +32,22 @@ export default function CapsuleThumbnail({ capsule, size, onPress }: CapsuleThum
       ]}
     >
       {/* Small image preview inside capsule */}
-      <Image
-        source={{ uri: capsule.thumbnailUri }}
-        style={[
-          styles.image,
-          {
-            width: size * 0.6,
-            height: size * 0.6,
-            borderRadius: size * 0.3,
-          },
-        ]}
-        resizeMode="cover"
-      />
+      <View
+        style={{
+          width: size * 0.6,
+          height: size * 0.6,
+          borderRadius: size * 0.3,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        <Image
+          source={{ uri: capsule.thumbnailUri }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <FilmFilterOverlay filterId={capsule.filmFilter} showBadge={false} />
+      </View>
       {/* Gloss */}
       <View
         style={[
@@ -78,6 +83,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   image: {
+    width: "100%",
+    height: "100%",
     overflow: "hidden",
   },
   gloss: {

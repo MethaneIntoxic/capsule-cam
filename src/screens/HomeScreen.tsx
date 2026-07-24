@@ -119,11 +119,11 @@ export default function HomeScreen() {
           {/* Main Action Button */}
           <TouchableOpacity
             style={styles.createButton}
-            onPress={() => navigateWithHaptics("/capture")}
+            onPress={() => navigateWithHaptics("/")}
             activeOpacity={0.85}
           >
             <Text style={styles.createButtonIcon}>📸</Text>
-            <Text style={styles.createButtonText}>CREATE NEW CAPSULE</Text>
+            <Text style={styles.createButtonText}>OPEN VIEWFINDER CAMERA</Text>
           </TouchableOpacity>
         </View>
 
@@ -175,7 +175,7 @@ export default function HomeScreen() {
         ) : (
           <TouchableOpacity
             style={styles.emptyShelfBox}
-            onPress={() => navigateWithHaptics("/capture")}
+            onPress={() => navigateWithHaptics("/")}
             activeOpacity={0.85}
           >
             <Text style={styles.emptyShelfIcon}>📸</Text>

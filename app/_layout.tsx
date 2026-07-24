@@ -47,6 +47,7 @@ export default function RootLayout() {
           >
             <Stack.Screen name="index" />
             <Stack.Screen name="capture" />
+            <Stack.Screen name="studio" />
             <Stack.Screen name="machine" />
             <Stack.Screen name="reveal" />
             <Stack.Screen name="collection" />

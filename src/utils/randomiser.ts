@@ -3,6 +3,7 @@
 
 import { CapsuleColor, Rarity } from "../models/Capsule";
 import { RARITY_TABLE } from "../models/Rarity";
+import { FilmFilterId, pickRandomFilmFilter } from "../models/FilmFilter";
 
 const CAPSULE_COLORS: CapsuleColor[] = [
   "pink", "blue", "green", "yellow", "purple", "orange", "white", "black",
@@ -11,14 +12,16 @@ const CAPSULE_COLORS: CapsuleColor[] = [
 interface RandomCapsuleParams {
   color?: CapsuleColor;
   rarity?: Rarity;
+  filmFilter?: FilmFilterId;
 }
 
 export function randomCapsuleParams(
   params?: RandomCapsuleParams
-): { color: CapsuleColor; rarity: Rarity } {
+): { color: CapsuleColor; rarity: Rarity; filmFilter: FilmFilterId } {
   const rarity = params?.rarity ?? pickRarity();
   const color = params?.color ?? pickColor(rarity);
-  return { color, rarity };
+  const filmFilter = params?.filmFilter ?? pickRandomFilmFilter();
+  return { color, rarity, filmFilter };
 }
 
 function pickRarity(): Rarity {

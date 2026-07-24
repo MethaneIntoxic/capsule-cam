@@ -189,11 +189,11 @@ export default function CollectionScreen() {
               onPress={() => {
                 haptics.selection();
                 sound.play("handleClick");
-                router.push("/capture");
+                router.push("/");
               }}
               activeOpacity={0.85}
             >
-              <Text style={styles.createLinkText}>✦ CREATE NEW CAPSULE</Text>
+              <Text style={styles.createLinkText}>✦ OPEN VIEWFINDER CAMERA</Text>
             </TouchableOpacity>
           </View>
         ) : (

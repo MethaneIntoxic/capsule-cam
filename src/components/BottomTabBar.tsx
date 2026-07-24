@@ -18,9 +18,10 @@ export default function BottomTabBar() {
   const bottomInset = Math.max(insets.bottom, Platform.OS === "android" ? 16 : 10);
 
   const tabs = [
-    { id: "studio", path: "/", label: "STUDIO", icon: "🏠" },
-    { id: "capture", path: "/capture", label: "VIEWFINDER", icon: "📸" },
+    { id: "viewfinder", path: "/", label: "VIEWFINDER", icon: "📸" },
+    { id: "machine", path: "/machine", label: "GASHAPON", icon: "🎰" },
     { id: "binder", path: "/collection", label: "BINDER", icon: "📦" },
+    { id: "studio", path: "/studio", label: "STUDIO", icon: "🏠" },
   ];
 
   const handleNavigate = (path: string) => {

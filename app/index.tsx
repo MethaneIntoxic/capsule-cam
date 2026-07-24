@@ -1,8 +1,8 @@
 // app/index.tsx
-// Home screen route.
+// Primary Viewfinder Camera Screen — Film & Polaroid Camera First.
 
-import HomeScreen from "../src/screens/HomeScreen";
+import ImagePickerScreen from "../src/screens/ImagePickerScreen";
 
 export default function Index() {
-  return <HomeScreen />;
+  return <ImagePickerScreen />;
 }

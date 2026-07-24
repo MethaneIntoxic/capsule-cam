@@ -3,6 +3,8 @@
 
 import { generateUUID } from "../utils/uuid";
 
+import { FilmFilterId, pickRandomFilmFilter } from "./FilmFilter";
+
 export type CapsuleId = string;
 export type ISODateString = string;
 
@@ -34,6 +36,7 @@ export interface Capsule {
   capsuleColor: CapsuleColor;
   machineTheme: MachineTheme;
   rarity: Rarity;
+  filmFilter: FilmFilterId;
   isOpened: boolean;
   openedAt: ISODateString | null;
 }
@@ -50,6 +53,7 @@ export function createCapsule(partial: Partial<Capsule> & { imageUri: string; th
     capsuleColor: partial.capsuleColor ?? "white",
     machineTheme: partial.machineTheme ?? "classic_red",
     rarity: partial.rarity ?? "common",
+    filmFilter: partial.filmFilter ?? pickRandomFilmFilter(),
     isOpened: partial.isOpened ?? false,
     openedAt: partial.openedAt ?? null,
   };
