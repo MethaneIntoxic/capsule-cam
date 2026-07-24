@@ -22,6 +22,18 @@ const PARTICLE_POSITIONS = [
   { x: 0, y: 110, size: 8, color: "#FFB74D" },
   { x: -70, y: -120, size: 7, color: "#E040FB" },
   { x: 70, y: -110, size: 9, color: "#D4AF37" },
+  { x: -130, y: 40, size: 10, color: "#FF5E36" },
+  { x: 130, y: 50, size: 8, color: "#00F0FF" },
+  { x: -30, y: -140, size: 12, color: "#FFD700" },
+  { x: 30, y: -130, size: 9, color: "#FFF" },
+  { x: -100, y: 110, size: 8, color: "#E040FB" },
+  { x: 100, y: 100, size: 10, color: "#D4AF37" },
+  { x: -150, y: -80, size: 7, color: "#00E5FF" },
+  { x: 150, y: -70, size: 8, color: "#FFF" },
+  { x: -50, y: 140, size: 9, color: "#FFB74D" },
+  { x: 50, y: 130, size: 11, color: "#FFD700" },
+  { x: -120, y: -120, size: 8, color: "#FFF" },
+  { x: 120, y: -120, size: 7, color: "#E040FB" },
 ];
 
 export default function ParticleBurst({ color, isVisible }: ParticleBurstProps) {

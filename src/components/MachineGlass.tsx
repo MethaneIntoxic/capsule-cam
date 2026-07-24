@@ -13,19 +13,25 @@ interface MachineGlassProps {
 }
 
 const DOME_MINI_CAPSULES: { color: CapsuleColor; left: number; bottom: number; rotation: string; size: number }[] = [
-  { color: "pink", left: 24, bottom: 18, rotation: "-25deg", size: 36 },
-  { color: "yellow", left: 62, bottom: 12, rotation: "15deg", size: 40 },
-  { color: "blue", left: 106, bottom: 16, rotation: "-10deg", size: 38 },
-  { color: "purple", left: 148, bottom: 22, rotation: "30deg", size: 34 },
-  { color: "white", left: 44, bottom: 42, rotation: "40deg", size: 32 },
-  { color: "green", left: 90, bottom: 48, rotation: "-35deg", size: 36 },
-  { color: "orange", left: 130, bottom: 44, rotation: "12deg", size: 34 },
+  { color: "pink", left: 16, bottom: 14, rotation: "-25deg", size: 36 },
+  { color: "yellow", left: 54, bottom: 8, rotation: "15deg", size: 40 },
+  { color: "blue", left: 98, bottom: 12, rotation: "-10deg", size: 38 },
+  { color: "purple", left: 140, bottom: 18, rotation: "30deg", size: 34 },
+  { color: "white", left: 34, bottom: 38, rotation: "40deg", size: 32 },
+  { color: "green", left: 78, bottom: 44, rotation: "-35deg", size: 36 },
+  { color: "orange", left: 122, bottom: 40, rotation: "12deg", size: 34 },
+  {color: "blue", left: 156, bottom: 32, rotation: "-20deg", size: 32 },
+  { color: "yellow", left: 88, bottom: 68, rotation: "22deg", size: 38 },
+  { color: "pink", left: 126, bottom: 64, rotation: "-14deg", size: 30 },
+  { color: "blue", left: 48, bottom: 62, rotation: "18deg", size: 32 },
+  { color: "yellow", left: 164, bottom: 54, rotation: "-45deg", size: 28 },
 ];
 
 export default function MachineGlass({ theme, imageUri, isVisible = true }: MachineGlassProps) {
   return (
     <View style={[styles.glassDome, { backgroundColor: theme.glassColor }]}>
-      {/* Curved glass shine reflection overlay */}
+      {/* Outer metallic ring highlights */}
+      <View style={styles.glassRingInner} />
       <View style={styles.glassReflectionTop} />
       <View style={styles.glassReflectionSide} />
 
@@ -78,6 +84,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
+  },
+  glassRingInner: {
+    position: "absolute",
+    top: 4,
+    left: 4,
+    right: 4,
+    bottom: 4,
+    borderRadius: 106,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
+    zIndex: 2,
+    pointerEvents: "none",
   },
   glassReflectionTop: {
     position: "absolute",

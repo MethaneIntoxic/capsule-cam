@@ -28,6 +28,8 @@ export default function CapsuleCard({ capsule }: CapsuleCardProps) {
 
   const isSpecial = capsule.rarity === "special";
   const isRare = capsule.rarity === "rare";
+  const isUltraRare = capsule.rarity === "ultra_rare";
+  const isLegendary = capsule.rarity === "legendary";
 
   return (
     <View
@@ -35,10 +37,12 @@ export default function CapsuleCard({ capsule }: CapsuleCardProps) {
         styles.cardFrame,
         isSpecial && styles.cardSpecialFrame,
         isRare && styles.cardRareFrame,
+        isUltraRare && styles.cardUltraRareFrame,
+        isLegendary && styles.cardLegendaryFrame,
       ]}
     >
       {/* Decorative Washi Tape Accent */}
-      <View style={styles.washiTape} />
+      <View style={[styles.washiTape, isLegendary && styles.washiTapeGold]} />
 
       {/* Main Polaroid Body */}
       <View style={styles.polaroidBody}>
@@ -109,6 +113,19 @@ const styles = StyleSheet.create({
     borderColor: "#FFD700",
     backgroundColor: "#FFFDF2",
   },
+  cardUltraRareFrame: {
+    borderColor: "#00F0FF",
+    backgroundColor: "#F0FCFF",
+    shadowColor: "#00F0FF",
+    shadowOpacity: 0.8,
+  },
+  cardLegendaryFrame: {
+    borderColor: "#FFD700",
+    backgroundColor: "#FFFDF5",
+    shadowColor: "#FFD700",
+    shadowOpacity: 0.9,
+    borderWidth: 3,
+  },
   washiTape: {
     position: "absolute",
     top: -10,
@@ -119,6 +136,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     transform: [{ rotate: "-2deg" }],
     zIndex: 10,
+  },
+  washiTapeGold: {
+    backgroundColor: "#C8372D",
   },
   polaroidBody: {
     width: "100%",

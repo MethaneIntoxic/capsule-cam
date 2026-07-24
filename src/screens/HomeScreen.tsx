@@ -81,6 +81,24 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        {/* Daily Free Capsule Reward Box */}
+        <TouchableOpacity
+          style={styles.dailyRewardCard}
+          onPress={() => navigateWithHaptics("/capture")}
+          activeOpacity={0.85}
+        >
+          <View style={styles.dailyRewardLeft}>
+            <Text style={styles.dailyRewardIcon}>🎁</Text>
+            <View>
+              <Text style={styles.dailyRewardTitle}>DAILY CAPSULE REWARD READY!</Text>
+              <Text style={styles.dailyRewardSub}>Tap to spin free 35mm foil capsule</Text>
+            </View>
+          </View>
+          <View style={styles.claimBadge}>
+            <Text style={styles.claimText}>CLAIM ✦</Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Hero Machine Poster */}
         <View style={styles.heroCard}>
           <View style={styles.heroLensVisual}>
@@ -230,7 +248,57 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(212, 175, 55, 0.3)",
-    overflow: "hidden",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  dailyRewardCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(200, 55, 45, 0.15)",
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#C8372D",
+    marginBottom: 16,
+    shadowColor: "#C8372D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  dailyRewardLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  dailyRewardIcon: {
+    fontSize: 24,
+  },
+  dailyRewardTitle: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#FFF",
+    letterSpacing: 1,
+  },
+  dailyRewardSub: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#D4AF37",
+    marginTop: 2,
+  },
+  claimBadge: {
+    backgroundColor: "#C8372D",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#D4AF37",
+  },
+  claimText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#FFF",
+    letterSpacing: 1,
   },
   tickerText: {
     fontSize: 10,

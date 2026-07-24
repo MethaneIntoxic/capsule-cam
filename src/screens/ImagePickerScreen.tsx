@@ -232,26 +232,30 @@ export default function ImagePickerScreen() {
 
         {/* Preset Photos Selection Bar */}
         <View style={styles.presetsSection}>
-          <Text style={styles.presetsTitle}>FILM STOCK PRESETS</Text>
+          <Text style={styles.presetsTitle}>FILM STOCK EMULATION & SAMPLE FRAMES</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetsList}>
-            {SAMPLE_PRESET_IMAGES.map((preset, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={[
-                  styles.presetChip,
-                  selectedImage === preset.uri && styles.presetChipActive,
-                ]}
-                onPress={() => {
-                  haptics.selection();
-                  sound.play("handleClick");
-                  setSelectedImage(preset.uri);
-                }}
-                activeOpacity={0.8}
-              >
-                <Image source={{ uri: preset.uri }} style={styles.presetThumb} />
-                <Text style={styles.presetText}>{preset.label}</Text>
-              </TouchableOpacity>
-            ))}
+            {SAMPLE_PRESET_IMAGES.map((preset, idx) => {
+              const isActive = selectedImage === preset.uri;
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={[
+                    styles.presetChip,
+                    isActive && styles.presetChipActive,
+                  ]}
+                  onPress={() => {
+                    haptics.selection();
+                    sound.play("handleClick");
+                    setSelectedImage(preset.uri);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Image source={{ uri: preset.uri }} style={styles.presetThumb} />
+                  <Text style={[styles.presetText, isActive && styles.presetTextActive]}>{preset.label}</Text>
+                  {isActive && <View style={styles.activeDot} />}
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
@@ -394,6 +398,13 @@ const styles = StyleSheet.create({
   presetChipActive: { borderColor: "#D4AF37", backgroundColor: "#22222B" },
   presetThumb: { width: 34, height: 34, borderRadius: 10 },
   presetText: { fontSize: 10, fontWeight: "900", color: "#E2DFD7", letterSpacing: 1 },
+  presetTextActive: { color: "#D4AF37" },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#D4AF37",
+  },
   feedBtn: {
     paddingVertical: 18,
     borderRadius: 18,
